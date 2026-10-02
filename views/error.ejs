@@ -4,11 +4,15 @@
 <%- include('partials/head', { title: title }) %>
 </head>
 <body>
-  <div class="error-page">
-    <img src="/img/mushroom-logo.svg" alt="" width="72" height="72" />
-    <h1><%= status %></h1>
-    <p><%= message %></p>
-    <a href="/" class="btn">กลับหน้าแดชบอร์ด</a>
-  </div>
+  <main class="error-page" id="main-content">
+    <img src="/img/logo-mark.svg" alt="" width="96" height="96" />
+    <p class="error-page__code"><%= status %></p>
+    <h1 class="error-page__title"><%= message %></h1>
+    <p class="error-page__hint"><%= status === 404 ? 'หน้านี้อาจถูกย้ายหรือพิมพ์ที่อยู่ผิด ลองกลับไปที่หน้าแรกหรือดูสภาพโรงเรือนสดได้เลย' : 'ลองรีเฟรชหน้านี้อีกครั้ง หากยังเป็นอยู่โปรดติดต่อผู้ดูแลระบบ' %></p>
+    <div class="error-page__actions">
+      <a href="/" class="btn">กลับหน้าแรก</a>
+      <a href="/dashboard" class="btn btn--ghost">ดูแดชบอร์ด</a>
+    </div>
+  </main>
 </body>
 </html>

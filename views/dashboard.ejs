@@ -4,8 +4,8 @@
 <%- include('partials/head', { title: title }) %>
 </head>
 <body>
+  <%- include('partials/navbar') %>
   <div class="page">
-    <%- include('partials/navbar') %>
 
     <main class="content" id="main-content">
 
@@ -27,7 +27,7 @@
           thresholds: thresholds,
           stats: stats,
           stale: stale,
-          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 18a4 4 0 1 1 .9-7.9 5 5 0 0 1 9.6-1.9A4.5 4.5 0 0 1 17.5 18H6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+          icon: 'i-co2'
         }) %>
         <%- include('partials/stat-card', {
           metricKey: 'temperature',
@@ -38,7 +38,7 @@
           thresholds: thresholds,
           stats: stats,
           stale: stale,
-          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 14.76V4a2 2 0 1 0-4 0v10.76a4 4 0 1 0 4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+          icon: 'i-temp'
         }) %>
         <%- include('partials/stat-card', {
           metricKey: 'humidity',
@@ -49,7 +49,7 @@
           thresholds: thresholds,
           stats: stats,
           stale: stale,
-          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3s6 7.2 6 11.2A6 6 0 1 1 6 14.2C6 10.2 12 3 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+          icon: 'i-drop'
         }) %>
       </section>
 
@@ -92,7 +92,12 @@
           </div>
         </div>
         <div class="chart-wrap">
-          <canvas id="history-chart" role="img" aria-label="กราฟแนวโน้มค่าเซนเซอร์ย้อนหลัง 24 ชั่วโมง"></canvas>
+          <canvas id="history-chart" role="img" aria-label="กราฟแนวโน้มค่าเซนเซอร์ย้อนหลัง 24 ชั่วโมง" aria-describedby="chart-summary"></canvas>
+          <p class="sr-only" id="chart-summary">
+            <% if (stats && stats.minCo2 !== null && stats.minCo2 !== undefined) { %>
+              ช่วง 24 ชั่วโมงที่ผ่านมา CO₂ อยู่ระหว่าง <%= stats.minCo2 %> ถึง <%= stats.maxCo2 %> ppm, อุณหภูมิ <%= stats.minTemperature %> ถึง <%= stats.maxTemperature %> °C, ความชื้น <%= stats.minHumidity %> ถึง <%= stats.maxHumidity %> %
+            <% } else { %>ยังไม่มีข้อมูลย้อนหลัง<% } %>
+          </p>
         </div>
       </section>
 
@@ -103,7 +108,7 @@
             <span class="panel__title">ข้อมูลละเอียด</span>
             <span class="panel__subtitle">ค่าที่วัดได้ล่าสุดและบันทึกการตัดสินใจของระบบ <%= tableRows %> รายการ — สำหรับนักวิจัย</span>
           </span>
-          <svg class="research__chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon research__chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
         </summary>
 
         <div class="research__body">
@@ -141,8 +146,8 @@
 
     </main>
 
-    <%- include('partials/footer') %>
   </div>
+  <%- include('partials/footer') %>
 
   <!-- Initial SSR data for client hydration -->
   <template id="initial-data"><%- JSON.stringify({

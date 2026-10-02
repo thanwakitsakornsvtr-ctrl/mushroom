@@ -2,7 +2,7 @@ const logger = require('../utils/logger');
 
 function notFoundHandler(req, res) {
   if (req.accepts('html')) {
-    return res.status(404).render('error', { title: 'ไม่พบหน้านี้', message: 'ไม่พบหน้าที่คุณต้องการ', status: 404 });
+    return res.status(404).render('error', { title: 'ไม่พบหน้านี้', robots: 'noindex', message: 'ไม่พบหน้าที่คุณต้องการ', status: 404 });
   }
   res.status(404).json({ error: 'Not found' });
 }
@@ -18,6 +18,7 @@ function errorHandler(err, req, res, next) {
 
   res.status(status).render('error', {
     title: 'เกิดข้อผิดพลาด',
+    robots: 'noindex',
     message: status === 500 ? 'เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง' : err.message,
     status,
   });

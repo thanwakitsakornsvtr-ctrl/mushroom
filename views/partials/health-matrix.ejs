@@ -5,6 +5,7 @@
 %>
 <article class="actuator-card" id="esp32-health-item"<% if (latest) { %> title="<%= latest.deviceId %>"<% } %>>
   <div class="actuator-card__header">
+    <span class="actuator-card__icon" aria-hidden="true"><svg class="icon"><use href="#i-chip"/></svg></span>
     <span class="status-dot <%= isUp ? 'status-dot--online' : 'status-dot--offline' %>" data-role="dot" aria-hidden="true"></span>
     <p class="actuator-card__label">กล่อง ESP32</p>
     <span class="status-badge status-badge--<%= isUp ? 'normal' : 'high' %>" data-role="state"><%= isUp ? 'ทำงานอยู่' : 'ขาดการติดต่อ' %></span>

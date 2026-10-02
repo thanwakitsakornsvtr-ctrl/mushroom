@@ -1,17 +1,46 @@
+<%
+  // รับจาก controller/error handler: title (ชื่อหน้า), pageTitle (ชื่อเต็มแทนรูปแบบปกติ),
+  // description, canonicalPath, robots — ไม่ส่งมาก็ใช้ค่าเริ่มต้นของเว็บ
+  var _title = locals.pageTitle || (locals.title ? locals.title + ' • ' + site.name : site.name);
+  var _desc = locals.description || site.description;
+  var _base = site.baseUrl;
+  var _canonical = (_base && locals.canonicalPath) ? _base + locals.canonicalPath : '';
+  var _ogImage = (_base || '') + '/img/og-image.png';
+  var _robots = locals.robots || 'index, follow';
+%>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light" />
-<meta name="description" content="ระบบเฝ้าระวังสภาพแวดล้อมโรงเรือนเพาะเห็ดนางฟ้าแบบเรียลไทม์ — CO₂, อุณหภูมิ, ความชื้น" />
-<meta name="theme-color" content="#F5F0E8" />
-<title>โรงเห็ดนางฟ้า • <%= title %></title>
+<meta name="theme-color" content="<%= site.themeColor %>" />
+<title><%= _title %></title>
+<meta name="description" content="<%= _desc %>" />
+<meta name="robots" content="<%= _robots %>" />
+<% if (_canonical) { %><link rel="canonical" href="<%= _canonical %>" /><% } %>
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="<%= site.name %>" />
+<meta property="og:locale" content="<%= site.locale %>" />
+<meta property="og:title" content="<%= _title %>" />
+<meta property="og:description" content="<%= _desc %>" />
+<% if (_canonical) { %><meta property="og:url" content="<%= _canonical %>" /><% } %>
+<meta property="og:image" content="<%= _ogImage %>" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="<%= _title %>" />
+<meta name="twitter:description" content="<%= _desc %>" />
+<meta name="twitter:image" content="<%= _ogImage %>" />
+
+<!-- Icons / PWA -->
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
 
-<!-- Preconnect for performance -->
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-<!-- Fonts: Inter (numbers/EN) + Noto Sans Thai (Thai) -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet" />
+<!-- Fonts: self-hosted (Noto Sans Thai + Inter) -->
+<link rel="preload" href="/vendor/fonts/noto-sans-thai/noto-sans-thai-thai-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/vendor/fonts/inter/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="/css/fonts.css?v=<%= assetVersion %>" />
 
 <!-- Main stylesheet -->
 <link rel="stylesheet" href="/css/style.css?v=<%= assetVersion %>" />

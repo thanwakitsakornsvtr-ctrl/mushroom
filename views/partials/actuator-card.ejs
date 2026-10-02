@@ -3,12 +3,11 @@
   //   dot="dot", state="state", updated="updated", error="error"
   var view = plugView.describe(plug, nowMs, plugStaleSeconds);
   var deviceLabel = plugView.LABEL[plug.device] || plug.device;
-  var iconSvg = plug.device === 'fan'
-    ? '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12c1.2-2.4 3.6-4 5-3s1.4 3.8-.6 5c-1.2.7-2.6.4-3.4 0M12 12c2.4 1.2 4 3.6 3 5s-3.8 1.4-5-.6c-.7-1.2-.4-2.6 0-3.4M12 12c-1.2 2.4-3.6 4-5 3s-1.4-3.8.6-5c1.2-.7 2.6-.4 3.4 0M12 12C9.6 10.8 8 8.4 9 7s3.8-1.4 5 .6c.7 1.2.4 2.6 0 3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3s-6 5.5-6 9.5a6 6 0 0 0 12 0C18 8.5 12 3 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 14.5a3 3 0 0 0 4 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  var iconId = plug.device === 'fan' ? 'i-fan' : 'i-mister';
 %>
 <article class="actuator-card" id="plug-<%= plug.device %>" data-device="<%= plug.device %>">
   <div class="actuator-card__header">
+    <span class="actuator-card__icon" aria-hidden="true"><svg class="icon"><use href="#<%= iconId %>"/></svg></span>
     <span class="status-dot status-dot--<%= view.online ? 'online' : 'offline' %>" data-role="dot" aria-hidden="true"></span>
     <p class="actuator-card__label"><%= deviceLabel %></p>
     <span class="status-badge status-badge--<%= view.badge %>" data-role="state"><%= view.text %></span>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<%- include('partials/head', { title: title }) %>
+<%
+  var _c = site.contact;
+  var _ld = null;
+  if (site.baseUrl && (_c.address || _c.phone)) {
+    _ld = {
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      name: site.name,
+      url: site.baseUrl + '/',
+      image: site.baseUrl + '/img/og-image.png',
+      description: site.description,
+      address: { '@type': 'PostalAddress', addressLocality: 'กันทรลักษ์', addressRegion: 'ศรีสะเกษ', addressCountry: 'TH' }
+    };
+    if (_c.address) _ld.address.streetAddress = _c.address;
+    if (_c.phone) _ld.telephone = _c.phone;
+  }
+%>
+<% if (_ld) { %><script type="application/ld+json"><%- JSON.stringify(_ld).replace(/</g, '\\u003c') %></script><% } %>
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <%
+    var stale = !latest || !latest.online;
+    var hasContact = _c.address || _c.phone || _c.line || _c.facebookUrl || _c.mapUrl;
+    var hasProducts = site.products && site.products.length;
+    var card = function (key, label, unit, symbol) {
+      return {
+        metricKey: key, label: label, unit: unit, icon: symbol,
+        value: latest ? latest[key] : null,
+        status: latest ? latest.status[key] : 'unknown',
+        thresholds: thresholds, stats: stats, stale: stale
+      };
+    };
+  %>
+
+  <main id="main-content">
+
+    <!-- ── Hero ── -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero__inner">
+        <div class="hero__copy">
+          <p class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><%= site.areaFull %></p>
+          <h1 class="hero__title" id="hero-heading"><%= site.name %></h1>
+          <p class="hero__lead"><%= site.tagline %> — ดูค่า CO₂ อุณหภูมิ และความชื้นของโรงเรือนสดๆ ได้ทุกเวลา</p>
+          <div class="hero__actions">
+            <a class="btn btn--lg" href="/dashboard">ดูสภาพโรงเรือนสด <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn--lg btn--ghost" href="/logic">ระบบทำงานอย่างไร</a>
+          </div>
+          <p class="hero__live <%= stale ? 'hero__live--off' : 'hero__live--on' %>">
+            <span class="status-dot <%= stale ? 'status-dot--offline' : 'status-dot--online' %>" aria-hidden="true"></span>
+            <% if (stale) { %>
+              <%= latest ? 'ขาดการติดต่อกับโรงเรือน — ค่าล่าสุดเมื่อ ' + labels.relativeTime(latest.createdAt, nowMs) : 'ยังไม่เคยได้รับข้อมูลจากโรงเรือน' %>
+            <% } else { %>
+              ระบบออนไลน์ · ส่งค่าล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %>
+            <% } %>
+          </p>
+        </div>
+        <div class="hero__art" aria-hidden="true">
+          <div class="hero__disc"><img src="/img/logo-mark.svg" alt="" width="260" height="260" /></div>
+          <% if (!stale) { %>
+          <span class="hero__chip hero__chip--co2"><svg class="icon"><use href="#i-co2"/></svg><%= Math.round(latest.co2) %> ppm</span>
+          <span class="hero__chip hero__chip--temp"><svg class="icon"><use href="#i-temp"/></svg><%= latest.temperature.toFixed(1) %> °C</span>
+          <span class="hero__chip hero__chip--humid"><svg class="icon"><use href="#i-drop"/></svg><%= latest.humidity.toFixed(1) %> %</span>
+          <% } %>
+        </div>
+      </div>
+    </section>
+
+    <div class="page">
+
+      <!-- ── เกี่ยวกับเห็ดนางฟ้า ── -->
+      <section class="section" aria-labelledby="about-heading">
+        <div class="section__head">
+          <p class="eyebrow eyebrow--plain">เกี่ยวกับเรา</p>
+          <h2 class="section__title" id="about-heading">เห็ดนางฟ้า ชอบอากาศถ่ายเท ชื้นพอดี</h2>
+          <p class="section__lead">ดอกเห็ดนางฟ้าสวยหรือไม่ขึ้นกับสภาพอากาศในโรงเรือนโดยตรง — CO₂ สูงเกินทำให้ดอกยืดและบิดเบี้ยว อากาศแห้งเกินทำให้ดอกไม่โต เราจึงวัดและปรับสภาพอากาศตลอดเวลา แทนการเดาด้วยตา</p>
+        </div>
+
+        <ul class="feature-grid">
+          <li class="feature">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
+            <h3 class="feature__title">วัดต่อเนื่อง</h3>
+            <p class="feature__text">เซนเซอร์วัด CO₂ อุณหภูมิ และความชื้นทุก <%= logic.readEverySeconds %> วินาที เฉลี่ยหลายค่าให้นิ่งก่อนตัดสินใจ</p>
+          </li>
+          <li class="feature">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-fan"/></svg></span>
+            <h3 class="feature__title">ปรับสภาพอัตโนมัติ</h3>
+            <p class="feature__text">ค่าเกินเกณฑ์ ระบบเปิดพัดลมระบายอากาศ ความชื้นต่ำ ระบบพ่นไอน้ำให้เอง ทั้งวันทั้งคืน</p>
+          </li>
+          <li class="feature">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <h3 class="feature__title">โปร่งใส ตรวจสอบได้</h3>
+            <p class="feature__text">ดูค่าสด กราฟย้อนหลัง 24 ชั่วโมง และเหตุผลที่ระบบเปิด/ปิดอุปกรณ์ได้ทุกครั้ง</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ── สภาพโรงเรือนตอนนี้ ── -->
+      <section class="section" aria-labelledby="now-heading">
+        <div class="section__head section__head--row">
+          <div>
+            <p class="eyebrow eyebrow--plain">ตอนนี้</p>
+            <h2 class="section__title" id="now-heading">สภาพโรงเรือนล่าสุด</h2>
+          </div>
+          <a class="link-arrow" href="/dashboard">ดูกราฟและอุปกรณ์ <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="stats-grid">
+          <%- include('partials/stat-card', card('co2', 'CO₂', 'ppm', 'i-co2')) %>
+          <%- include('partials/stat-card', card('temperature', 'อุณหภูมิ', '°C', 'i-temp')) %>
+          <%- include('partials/stat-card', card('humidity', 'ความชื้น', '%', 'i-drop')) %>
+        </div>
+      </section>
+
+      <% if (hasProducts) { %>
+      <!-- ── ผลผลิต ── -->
+      <section class="section" aria-labelledby="products-heading">
+        <div class="section__head">
+          <p class="eyebrow eyebrow--plain">ผลผลิต</p>
+          <h2 class="section__title" id="products-heading">สิ่งที่เรามี</h2>
+        </div>
+        <ul class="feature-grid">
+          <% site.products.forEach(function (p) { %>
+          <li class="feature">
+            <h3 class="feature__title"><%= p.name %></h3>
+            <% if (p.note) { %><p class="feature__text"><%= p.note %></p><% } %>
+          </li>
+          <% }); %>
+        </ul>
+      </section>
+      <% } %>
+
+      <% if (hasContact) { %>
+      <!-- ── ติดต่อ ── -->
+      <section class="section" aria-labelledby="contact-heading">
+        <div class="section__head">
+          <p class="eyebrow eyebrow--plain">ติดต่อ</p>
+          <h2 class="section__title" id="contact-heading">มาเยี่ยมหรือสั่งซื้อได้</h2>
+          <p class="section__lead"><%= site.areaFull %></p>
+        </div>
+        <ul class="contact-grid">
+          <% if (_c.address) { %><li class="contact"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><div><p class="contact__label">ที่อยู่</p><p><%= _c.address %></p></div></li><% } %>
+          <% if (_c.phone) { %><li class="contact"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg><div><p class="contact__label">โทร</p><a href="<%= _c.phoneHref %>"><%= _c.phone %></a></div></li><% } %>
+          <% if (_c.line) { %><li class="contact"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg><div><p class="contact__label">LINE</p><a href="<%= _c.lineHref %>" target="_blank" rel="noopener"><%= _c.line %></a></div></li><% } %>
+          <% if (_c.facebookUrl) { %><li class="contact"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><div><p class="contact__label">Facebook</p><a href="<%= _c.facebookUrl %>" target="_blank" rel="noopener">เปิดเพจ</a></div></li><% } %>
+          <% if (_c.mapUrl) { %><li class="contact"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><div><p class="contact__label">แผนที่</p><a href="<%= _c.mapUrl %>" target="_blank" rel="noopener">นำทางไปโรงเห็ด</a></div></li><% } %>
+        </ul>
+      </section>
+      <% } %>
+
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

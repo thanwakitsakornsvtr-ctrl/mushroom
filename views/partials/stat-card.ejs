@@ -31,7 +31,7 @@
 
   <!-- Zone 1: Header -->
   <div class="stat-card__header">
-    <div class="stat-card__icon-wrap stat-card__icon-wrap--<%= metricKey %>"><%- icon %></div>
+    <div class="stat-card__icon-wrap stat-card__icon-wrap--<%= metricKey %>"><svg class="icon" aria-hidden="true"><use href="#<%= icon %>"/></svg></div>
     <span class="stat-card__label"><%= label %></span>
     <span class="status-badge status-badge--<%= effectiveStatus %>" data-role="status"><%= stale ? '?' : badgeLabel %></span>
   </div>

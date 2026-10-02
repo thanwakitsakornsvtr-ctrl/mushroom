@@ -1,30 +1,28 @@
 <%
   // status-summary — id="status-summary" + data-role="title"/"text" ที่ dashboard.client.js ต้องการ
-  var summaryMod, summaryTitle, summaryText, summaryIcon;
-
-  if (stale) {
-    summaryMod   = 'summary--warn';
-    summaryTitle = 'ขาดการติดต่อ';
-    summaryText  = staleSeconds > 0
-      ? 'ไม่มีข้อมูลใหม่มานาน ' + staleSeconds + ' วินาที — ตรวจสอบกล่อง ESP32'
-      : 'ยังไม่เคยรับข้อมูลจากอุปกรณ์';
-    summaryIcon  = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  } else if (latest && (latest.status.co2 === 'high' || latest.status.temperature === 'high' || latest.status.humidity === 'low')) {
-    summaryMod   = 'summary--alert';
-    summaryTitle = 'ค่าผิดปกติ';
-    summaryText  = 'บางค่าออกนอกช่วงเหมาะสม — ระบบกำลังปรับสภาพแวดล้อมอยู่';
-    summaryIcon  = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-  } else {
-    summaryMod   = 'summary--ok';
-    summaryTitle = 'ทุกอย่างปกติ';
-    summaryText  = 'สภาพแวดล้อมอยู่ในช่วงเหมาะสมสำหรับการเพาะเห็ดนางฟ้า';
-    summaryIcon  = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><path d="m8 12 3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  }
+  // ประโยคมาจาก labels.summary ตัวเดียวกับที่ browser ใช้ตอนอัปเดตสด (กันข้อความเปลี่ยนวูบหลังโหลดหน้า)
+  var _byDevice = {};
+  plugs.forEach(function (p) { _byDevice[p.device] = p; });
+  var sum = labels.summary({
+    hasData: !!latest,
+    stale: stale,
+    staleSeconds: staleSeconds,
+    values: latest || {},
+    status: latest ? latest.status : {},
+    co2DangerAt: co2DangerAt,
+    fan: plugView.brief(_byDevice.fan, nowMs, plugStaleSeconds),
+    mister: plugView.brief(_byDevice.mister, nowMs, plugStaleSeconds)
+  });
 %>
-<div id="status-summary" class="summary <%= summaryMod %>" role="status" aria-live="polite">
-  <div class="summary__icon"><%- summaryIcon %></div>
+<%# role="status" ประกาศเฉพาะตอนข้อความเปลี่ยน (JS ตั้งข้อความเมื่อต่างจากเดิมเท่านั้น); ไอคอนสลับด้วย CSS ตาม class summary--ok/warn/alert %>
+<div id="status-summary" class="summary summary--<%= sum.tone %>" role="status">
+  <div class="summary__icon" aria-hidden="true">
+    <svg class="icon summary__icon-ok"><use href="#i-ok"/></svg>
+    <svg class="icon summary__icon-warn"><use href="#i-warn"/></svg>
+    <svg class="icon summary__icon-alert"><use href="#i-alert"/></svg>
+  </div>
   <div>
-    <p class="summary__title" data-role="title"><%= summaryTitle %></p>
-    <p class="summary__text"  data-role="text"><%= summaryText %></p>
+    <p class="summary__title" data-role="title"><%= sum.title %></p>
+    <p class="summary__text"  data-role="text"><%= sum.text %></p>
   </div>
 </div>

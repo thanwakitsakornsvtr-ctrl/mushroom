@@ -28,6 +28,8 @@ module.exports = {
   port: Number(process.env.PORT) || 4100,
   deviceApiKey,
   corsOrigin: process.env.CORS_ORIGIN || '*',
+  // ใช้สร้าง canonical / og:url / ลิงก์รูปแชร์ — ตั้งเป็นโดเมนจริงตอน deploy
+  siteUrl: (process.env.SITE_URL || '').replace(/\/+$/, ''),
   dbPath: path.resolve(process.cwd(), dbPath),
   dataRetentionDays: Number(process.env.DATA_RETENTION_DAYS) || 30,
   deviceOfflineSeconds: Number(process.env.DEVICE_OFFLINE_SECONDS) || 60,

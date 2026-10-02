@@ -231,18 +231,27 @@
     if (!canvas || typeof Chart === 'undefined') return null;
     var ctx = canvas.getContext('2d');
 
+    /* สี/ฟอนต์ทั้งหมดอ่านจาก design tokens ใน style.css — แก้ที่เดียวกราฟตามทันที */
+    var css = getComputedStyle(document.documentElement);
+    function token(name) { return css.getPropertyValue(name).trim(); }
+    var cCo2 = token('--color-metric-co2'), cTemp = token('--color-metric-temp'), cHumid = token('--color-metric-humid');
+    var rCo2 = token('--color-metric-co2-rgb'), rTemp = token('--color-metric-temp-rgb'), rHumid = token('--color-metric-humid-rgb');
+    var cText = token('--color-text'), cMuted = token('--color-text-muted'), cFaint = token('--color-text-faint');
+    var cSurface = token('--color-surface'), cBorder = token('--color-border');
+    var fontNum = token('--font-number'), fontBody = token('--font-body');
+
     /* Gradient fills */
     var gradCo2  = ctx.createLinearGradient(0, 0, 0, 320);
-    gradCo2.addColorStop(0,   'rgba(123, 94, 58, 0.20)');
-    gradCo2.addColorStop(1,   'rgba(123, 94, 58, 0.01)');
+    gradCo2.addColorStop(0,   'rgba(' + rCo2 + ', 0.20)');
+    gradCo2.addColorStop(1,   'rgba(' + rCo2 + ', 0.01)');
 
     var gradTemp = ctx.createLinearGradient(0, 0, 0, 320);
-    gradTemp.addColorStop(0,  'rgba(192, 90, 50, 0.20)');
-    gradTemp.addColorStop(1,  'rgba(192, 90, 50, 0.01)');
+    gradTemp.addColorStop(0,  'rgba(' + rTemp + ', 0.20)');
+    gradTemp.addColorStop(1,  'rgba(' + rTemp + ', 0.01)');
 
     var gradHumid = ctx.createLinearGradient(0, 0, 0, 320);
-    gradHumid.addColorStop(0, 'rgba(47, 122, 135, 0.20)');
-    gradHumid.addColorStop(1, 'rgba(47, 122, 135, 0.01)');
+    gradHumid.addColorStop(0, 'rgba(' + rHumid + ', 0.20)');
+    gradHumid.addColorStop(1, 'rgba(' + rHumid + ', 0.01)');
 
     var series = initialData.chartSeries || [];
     series.forEach(function (p) { bucketKeys.push(bucketOf(p.t)); bucketCounts.push(p.n || 1); });
@@ -256,40 +265,40 @@
           {
             label: 'CO₂ (ppm)',
             data: series.map(function (p) { return p.co2; }),
-            borderColor: '#7B5E3A',
+            borderColor: cCo2,
             backgroundColor: gradCo2,
             fill: true,
             yAxisID: 'yCo2',
             tension: 0.25,
             pointRadius: 0,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: '#7B5E3A',
+            pointHoverBackgroundColor: cCo2,
             borderWidth: 2,
           },
           {
             label: 'อุณหภูมิ (°C)',
             data: series.map(function (p) { return p.temperature; }),
-            borderColor: '#C05A32',
+            borderColor: cTemp,
             backgroundColor: gradTemp,
             fill: true,
             yAxisID: 'yTemp',
             tension: 0.25,
             pointRadius: 0,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: '#C05A32',
+            pointHoverBackgroundColor: cTemp,
             borderWidth: 2,
           },
           {
             label: 'ความชื้น (%)',
             data: series.map(function (p) { return p.humidity; }),
-            borderColor: '#2F7A87',
+            borderColor: cHumid,
             backgroundColor: gradHumid,
             fill: true,
             yAxisID: 'yTemp',
             tension: 0.25,
             pointRadius: 0,
             pointHoverRadius: 5,
-            pointHoverBackgroundColor: '#2F7A87',
+            pointHoverBackgroundColor: cHumid,
             borderWidth: 2,
           }
         ]
@@ -301,15 +310,15 @@
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(253, 250, 245, 0.95)',
-            titleColor: '#1C1008',
-            bodyColor: '#6B5540',
-            borderColor: 'rgba(139,110,72,0.2)',
+            backgroundColor: cSurface,
+            titleColor: cText,
+            bodyColor: cMuted,
+            borderColor: cBorder,
             borderWidth: 1,
             padding: 12,
             cornerRadius: 12,
-            titleFont: { family: 'Noto Sans Thai, Inter', weight: '600', size: 12 },
-            bodyFont: { family: 'Inter, Noto Sans Thai', size: 13 },
+            titleFont: { family: fontBody, weight: '600', size: 12 },
+            bodyFont: { family: fontNum, size: 13 },
             callbacks: {
               title: function (items) { return items[0].label; },
             }
@@ -319,25 +328,25 @@
           x: {
             ticks: {
               maxTicksLimit: 6,
-              color: '#9C8470',
-              font: { family: 'Inter, Noto Sans Thai', size: 11 },
+              color: cFaint,
+              font: { family: fontNum, size: 12 },
               maxRotation: 0,
             },
-            grid: { color: 'rgba(139,110,72,0.08)', drawBorder: false },
+            grid: { color: cBorder, drawBorder: false },
             border: { display: false }
           },
           yCo2: {
             position: 'right',
-            title: { display: true, text: 'CO₂ (ppm)', color: '#9C8470', font: { size: 11, family: 'Inter' } },
-            ticks: { color: '#9C8470', font: { family: 'Inter', size: 11 } },
+            title: { display: true, text: 'CO₂ (ppm)', color: cFaint, font: { size: 12, family: fontNum } },
+            ticks: { color: cFaint, font: { family: fontNum, size: 12 } },
             grid: { drawOnChartArea: false, drawBorder: false },
             border: { display: false }
           },
           yTemp: {
             position: 'left',
-            title: { display: true, text: '°C / %', color: '#9C8470', font: { size: 11, family: 'Inter' } },
-            ticks: { color: '#9C8470', font: { family: 'Inter', size: 11 } },
-            grid: { color: 'rgba(139,110,72,0.06)', drawBorder: false },
+            title: { display: true, text: '°C / %', color: cFaint, font: { size: 12, family: fontNum } },
+            ticks: { color: cFaint, font: { family: fontNum, size: 12 } },
+            grid: { color: cBorder, drawBorder: false },
             border: { display: false }
           }
         },

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="โลโก้โรงเห็ดนางฟ้า"><g transform="translate(32 35) scale(.9) translate(-32 -35)">
+  <g transform="translate(30 55) rotate(-50) scale(.84)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#B07F57"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#FFF6EA" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/></g>
+  <g transform="translate(34 55) rotate(50) scale(.84)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#8A5A38"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#FFF6EA" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/></g>
+  <g transform="translate(32 55) scale(.98)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#6B4226"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#FFF6EA" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/></g>
+  <path d="M27 54.5h10l-1.4 5.4a2 2 0 0 1-1.9 1.5h-3.4a2 2 0 0 1-1.9-1.5z" fill="#C99B73"/></g>
+</svg>

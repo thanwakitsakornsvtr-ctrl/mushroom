@@ -1,8 +1,6 @@
-<svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="16" fill="#FFF6EA"/>
-  <path d="M8 31c2.4-13.2 12-22 24-22s21.6 8.8 24 22c-5.5 6.7-14.4 10.5-24 10.5S13.5 37.7 8 31Z" fill="#D8B894"/>
-  <path d="M10.5 28.5C15 19.7 23.1 14.2 32 14.2s17 5.5 21.5 14.3c-5 3.2-12.8 5.2-21.5 5.2s-16.5-2-21.5-5.2Z" fill="#FFF8EE" opacity=".75"/>
-  <path d="M23 32.5c0 10.5 3.1 21.5 9 21.5s9-11 9-21.5c-2.5 1-5.5 1.6-9 1.6s-6.5-.6-9-1.6Z" fill="#C99B73"/>
-  <circle cx="21" cy="24" r="2.5" fill="#B68E6D"/>
-  <circle cx="43.5" cy="25" r="2.4" fill="#9C7354"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="โลโก้โรงเห็ดนางฟ้า"><rect width="64" height="64" rx="14" fill="#2E7D52"/><g transform="translate(32 33) scale(.92) translate(-32 -33)"><g transform="translate(32 35) scale(.9) translate(-32 -35)">
+  <g transform="translate(30 55) rotate(-50) scale(.84)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#D8C3A5"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#2E7D52" stroke-width="1.8" stroke-linecap="round" opacity="0.45"/></g>
+  <g transform="translate(34 55) rotate(50) scale(.84)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#EBDCC4"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#2E7D52" stroke-width="1.8" stroke-linecap="round" opacity="0.45"/></g>
+  <g transform="translate(32 55) scale(.98)"><path d="M0 0C-4 -4 -17 -10 -19 -22C-20 -33 -11 -40 0 -40C11 -40 20 -33 19 -22C17 -10 4 -4 0 0Z" fill="#FFF6EA"/><path d="M0 -4L-11 -26M0 -4L-4 -33M0 -4L4 -33M0 -4L11 -26" fill="none" stroke="#2E7D52" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/></g>
+  <path d="M27 54.5h10l-1.4 5.4a2 2 0 0 1-1.9 1.5h-3.4a2 2 0 0 1-1.9-1.5z" fill="#E8D7C3"/></g></g>
 </svg>

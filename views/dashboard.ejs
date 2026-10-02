@@ -145,7 +145,7 @@
   </div>
 
   <!-- Initial SSR data for client hydration -->
-  <template id="initial-data"><%= JSON.stringify({
+  <template id="initial-data"><%- JSON.stringify({
     latest,
     chartSeries,
     chartBucketSeconds,
@@ -159,7 +159,7 @@
     deviceOfflineSeconds,
     tableRows,
     co2DangerAt
-  }) %></template>
+  }).replace(/</g, '\\u003c') %></template>
 
   <!-- Chart.js (เสิร์ฟจาก node_modules ในเครื่องเอง ไม่พึ่ง CDN) -->
   <script src="/vendor/chart.js/chart.umd.js" defer></script>

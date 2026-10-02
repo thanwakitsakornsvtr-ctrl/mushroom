@@ -10,7 +10,15 @@
   var initialData = { latest: null, chartSeries: [], chartBucketSeconds: 300, stats: null, thresholds: {}, deviceId: null };
   try {
     var el = document.getElementById('initial-data');
-    if (el) initialData = JSON.parse(el.textContent);
+    if (el) {
+      var rawInitialData = (el.content && el.content.textContent)
+        || el.textContent
+        || el.innerHTML
+        || '';
+      if (rawInitialData.trim()) {
+        initialData = JSON.parse(rawInitialData);
+      }
+    }
   } catch (e) {
     console.error('[Dashboard] Failed to parse initial data:', e);
   }

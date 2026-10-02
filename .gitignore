@@ -1,0 +1,37 @@
+# ============================================================
+#  .gitignore — server-ssr (Node.js / Express)
+#  (root-level .gitignore ครอบคลุม OS/IDE files แล้ว)
+# ============================================================
+
+# Dependencies
+node_modules/
+
+# Environment variables — ใช้ .env.example เป็น template
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# SQLite database (runtime data — ไม่ใช่ source code)
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# เก็บ folder ไว้ให้ทีม clone แล้วมี folder พร้อมใช้
+!data/.gitkeep
+
+# Logs (runtime — generate อัตโนมัติ)
+logs/*.log
+logs/*.log.*
+logs/pm2-out.log
+logs/pm2-error.log
+logs/*-audit.json
+!logs/.gitkeep
+
+# npm debug
+npm-debug.log*
+
+# PM2
+.pm2/

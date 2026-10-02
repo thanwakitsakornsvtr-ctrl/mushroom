@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<%- include('partials/head', { title: title }) %>
+</head>
+<body>
+  <div class="page">
+    <%- include('partials/navbar') %>
+
+    <main class="content" id="main-content">
+
+      <%
+        var stale = !latest || !latest.online;
+        var staleSeconds = latest ? Math.max(0, Math.round((nowMs - new Date(latest.createdAt).getTime()) / 1000)) : 0;
+      %>
+      <!-- ── สรุปสถานะ: ตอนนี้โอเคไหม + ระบบทำอะไรอยู่ (รวมเตือนขาดการติดต่อด้วย) ── -->
+      <%- include('partials/status-summary', { stale: stale, staleSeconds: staleSeconds }) %>
+
+      <!-- ── ค่าเซนเซอร์ล่าสุด 3 ค่า + ต่ำสุด/สูงสุด 24 ชม. ── -->
+      <section class="stats-grid" aria-label="ค่าเซนเซอร์ล่าสุด">
+        <%- include('partials/stat-card', {
+          metricKey: 'co2',
+          label: 'CO₂',
+          value: latest ? latest.co2 : null,
+          unit: 'ppm',
+          status: latest ? latest.status.co2 : 'unknown',
+          thresholds: thresholds,
+          stats: stats,
+          stale: stale,
+          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 18a4 4 0 1 1 .9-7.9 5 5 0 0 1 9.6-1.9A4.5 4.5 0 0 1 17.5 18H6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+        }) %>
+        <%- include('partials/stat-card', {
+          metricKey: 'temperature',
+          label: 'อุณหภูมิ',
+          value: latest ? latest.temperature : null,
+          unit: '°C',
+          status: latest ? latest.status.temperature : 'unknown',
+          thresholds: thresholds,
+          stats: stats,
+          stale: stale,
+          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 14.76V4a2 2 0 1 0-4 0v10.76a4 4 0 1 0 4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+        }) %>
+        <%- include('partials/stat-card', {
+          metricKey: 'humidity',
+          label: 'ความชื้น',
+          value: latest ? latest.humidity : null,
+          unit: '%',
+          status: latest ? latest.status.humidity : 'unknown',
+          thresholds: thresholds,
+          stats: stats,
+          stale: stale,
+          icon: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3s6 7.2 6 11.2A6 6 0 1 1 6 14.2C6 10.2 12 3 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+        }) %>
+      </section>
+
+      <!-- ── อุปกรณ์ในโรงเรือน: พัดลม · เครื่องพ่นไอน้ำ · กล่อง ESP32 ── -->
+      <section class="panel" aria-labelledby="actuator-heading">
+        <div class="panel__header">
+          <div>
+            <h2 class="panel__title" id="actuator-heading">อุปกรณ์ในโรงเรือน</h2>
+            <p class="panel__subtitle">ESP32 เปิด/ปิดพัดลมและเครื่องพ่นไอน้ำให้อัตโนมัติ — หน้านี้ดูได้อย่างเดียว สั่งงานไม่ได้</p>
+          </div>
+        </div>
+        <div class="actuator-grid" id="actuator-grid">
+          <% plugs.forEach(function (plug) { %>
+            <%- include('partials/actuator-card', { plug: plug }) %>
+          <% }); %>
+          <%- include('partials/health-matrix', { latest: latest }) %>
+        </div>
+      </section>
+
+      <!-- ── Chart Panel ── -->
+      <section class="panel" aria-labelledby="chart-heading">
+        <div class="panel__header">
+          <div>
+            <h2 class="panel__title" id="chart-heading">แนวโน้มย้อนหลัง 24 ชั่วโมง</h2>
+            <p class="panel__subtitle">จุดละค่าเฉลี่ย <%= Math.round(chartBucketSeconds / 60) %> นาที อัปเดตเองอัตโนมัติ</p>
+          </div>
+          <div class="legend" role="list" aria-label="ตำนานกราฟ">
+            <div class="legend__item" role="listitem">
+              <span class="legend__dot legend__dot--co2" aria-hidden="true"></span>
+              <span>CO₂</span>
+            </div>
+            <div class="legend__item" role="listitem">
+              <span class="legend__dot legend__dot--temperature" aria-hidden="true"></span>
+              <span>อุณหภูมิ</span>
+            </div>
+            <div class="legend__item" role="listitem">
+              <span class="legend__dot legend__dot--humidity" aria-hidden="true"></span>
+              <span>ความชื้น</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="history-chart" role="img" aria-label="กราฟแนวโน้มค่าเซนเซอร์ย้อนหลัง 24 ชั่วโมง"></canvas>
+        </div>
+      </section>
+
+      <!-- ── ข้อมูลละเอียดสำหรับนักวิจัย (พับไว้ จำสถานะเปิด/ปิดในเครื่อง) ── -->
+      <details class="panel research" id="research-details">
+        <summary class="research__summary">
+          <span>
+            <span class="panel__title">ข้อมูลละเอียด</span>
+            <span class="panel__subtitle">ค่าที่วัดได้ล่าสุดและบันทึกการตัดสินใจของระบบ <%= tableRows %> รายการ — สำหรับนักวิจัย</span>
+          </span>
+          <svg class="research__chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </summary>
+
+        <div class="research__body">
+          <h3 class="research__heading" id="table-heading">ค่าที่วัดได้ล่าสุด</h3>
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th scope="col">เวลา</th>
+                <th scope="col">CO₂ (ppm)</th>
+                <th scope="col">อุณหภูมิ (°C)</th>
+                <th scope="col">ความชื้น (%)</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <% if (recent.length === 0) { %>
+                <tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>
+              <% } %>
+              <% recent.forEach(function(r) { %>
+                <tr>
+                  <td title="<%= labels.fullTime(r.createdAt) %>"><%= labels.shortTime(r.createdAt, nowMs) %></td>
+                  <td class="status-<%= r.status.co2 %>"><%= labels.value('co2', r.co2) %></td>
+                  <td class="status-<%= r.status.temperature %>"><%= labels.value('temperature', r.temperature) %></td>
+                  <td class="status-<%= r.status.humidity %>"><%= labels.value('humidity', r.humidity) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+          <h3 class="research__heading" id="decision-heading">ทำไมเครื่องถึงเปิด/ปิด</h3>
+          <%- include('partials/decision-log', { decisions: decisions }) %>
+        </div>
+      </details>
+
+    </main>
+
+    <%- include('partials/footer') %>
+  </div>
+
+  <!-- Initial SSR data for client hydration -->
+  <template id="initial-data"><%= JSON.stringify({
+    latest,
+    chartSeries,
+    chartBucketSeconds,
+    stats,
+    thresholds,
+    deviceId: latest ? latest.deviceId : null,
+    plugs,
+    decisions,
+    serverNow: nowMs,
+    plugStaleSeconds,
+    deviceOfflineSeconds,
+    tableRows,
+    co2DangerAt
+  }) %></template>
+
+  <!-- Chart.js (เสิร์ฟจาก node_modules ในเครื่องเอง ไม่พึ่ง CDN) -->
+  <script src="/vendor/chart.js/chart.umd.js" defer></script>
+
+  <!-- Dashboard client -->
+  <script src="/js/labels.js?v=<%= assetVersion %>" defer></script>
+  <script src="/js/plug-view.js?v=<%= assetVersion %>" defer></script>
+  <script src="/js/dashboard.client.js?v=<%= assetVersion %>" defer></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<%
+  // navOnline / navLastUpdated ถูก inject โดย navLocals middleware (ทุกหน้า)
+  // dashboard.client.js จะ override ค่านี้แบบ live บนหน้า dashboard
+  var _online = typeof navOnline !== 'undefined' ? navOnline : false;
+%>
+<nav class="navbar" role="navigation" aria-label="เมนูหลัก">
+  <div class="navbar__brand">
+    <a href="/" class="navbar__brand-link" aria-label="กลับหน้าแดชบอร์ด">
+      <span class="navbar__logo-mark" aria-hidden="true">
+        <img class="navbar__logo" src="/img/mushroom-logo.svg" alt="" width="40" height="40" />
+      </span>
+      <div class="navbar__info">
+        <span class="navbar__title">โรงเห็ดนางฟ้า</span>
+        <span class="navbar__subtitle">Monitoring Dashboard</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="navbar__right">
+    <div class="navbar__meta" aria-label="อัปเดตล่าสุด">
+      <span class="navbar__meta-label">อัปเดต</span>
+      <span class="navbar__meta-value" id="nav-last-updated">
+        <% if (navLastUpdated) { %>—<% } else { %>ยังไม่มีข้อมูล<% } %>
+      </span>
+    </div>
+    <div class="navbar__status" aria-live="polite" aria-label="สถานะการเชื่อมต่อ">
+      <span class="status-dot <%= _online ? 'status-dot--online' : 'status-dot--offline' %>" id="connection-dot" aria-hidden="true"></span>
+      <span id="connection-label"><%= _online ? 'ออนไลน์' : 'ขาดการติดต่อ' %></span>
+    </div>
+  </div>
+
+  <nav class="navbar__tabs" aria-label="หน้า">
+    <a href="/" class="navbar__tab<% if (activePage === 'dashboard') { %> navbar__tab--active<% } %>">แดชบอร์ด</a>
+    <a href="/logic" class="navbar__tab<% if (activePage === 'logic') { %> navbar__tab--active<% } %>">หลักการทำงาน</a>
+  </nav>
+</nav>
+
+<%# บนหน้าที่ไม่ใช่ dashboard (ไม่มี dashboard.client.js) ให้ poll /api/sensors/latest ทุก 10 วิ
+    เพื่ออัปเดตสถานะ navbar แบบ live โดยไม่ต้องโหลดหน้าใหม่ %>
+<% if (activePage !== 'dashboard') { %>
+<script src="/js/nav-status.client.js?v=<%= assetVersion %>" defer></script>
+<% } %>

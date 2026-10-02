@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<%- include('partials/head', { title: title }) %>
+</head>
+<body>
+  <div class="page">
+    <%- include('partials/navbar') %>
+
+    <main class="content" id="main-content">
+      <h1 class="panel__title" style="margin-bottom: var(--space-3);">หลักการทำงานของระบบ</h1>
+
+      <!-- ── ขั้นตอนการทำงาน ── -->
+      <section class="panel" aria-labelledby="flow-heading" style="margin-bottom:var(--space-3)">
+        <div class="panel__header">
+          <div>
+            <h2 class="panel__title" id="flow-heading">ขั้นตอนการควบคุมสภาพแวดล้อม</h2>
+            <p class="panel__subtitle">ESP32 วนซ้ำทุก <%= logic.readEverySeconds %> วินาที</p>
+          </div>
+        </div>
+        <ol class="logic-flow" aria-label="ขั้นตอน">
+          <li class="logic-step">
+            <div class="logic-step__num">1</div>
+            <p class="logic-step__title">วัดค่า</p>
+            <p class="logic-step__text">SCD40 วัด CO₂ · SHT30/SHT40 วัดอุณหภูมิและความชื้น เฉลี่ย <%= logic.smoothingReadings %> ค่าล่าสุด</p>
+          </li>
+          <li class="logic-step">
+            <div class="logic-step__num">2</div>
+            <p class="logic-step__title">เปรียบเทียบ</p>
+            <p class="logic-step__text">เช็คว่าค่าแต่ละตัวเกินขีดจำกัดหรือยัง ถ้าเซ็นเซอร์ขาดนาน <%= logic.sensorFailMinutes %> นาที หยุดสั่งงาน</p>
+          </li>
+          <li class="logic-step">
+            <div class="logic-step__num">3</div>
+            <p class="logic-step__title">สั่งอุปกรณ์</p>
+            <p class="logic-step__text">ส่งคำสั่งเปิด/ปิดผ่าน Wi-Fi ไปยังปลั๊กอัจฉริยะ ตรวจสอบผลทุก <%= logic.plugCheckSeconds %> วินาที</p>
+          </li>
+        </ol>
+        <p class="logic-note">หมายเหตุ: server บันทึกและแสดงผลเท่านั้น — การตัดสินใจเกิดขึ้นบน ESP32 ทั้งหมด</p>
+      </section>
+
+      <!-- ── กฎการเปิด/ปิดอุปกรณ์ ── -->
+      <div class="rule-grid">
+
+        <!-- พัดลม -->
+        <section class="panel rule-card" aria-labelledby="fan-heading">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title" id="fan-heading">
+                <svg viewBox="0 0 20 20" fill="none" style="display:inline;width:20px;height:20px;vertical-align:middle;margin-right:6px" aria-hidden="true">
+                  <path d="M10 10c1-2 3-3.3 4.2-2.5s1.1 3.2-.5 4.2c-1 .6-2.2.3-2.8 0M10 10c2 1 3.3 3 2.5 4.2s-3.2 1.1-4.2-.5c-.6-1-.3-2.2 0-2.8M10 10c-1 2-3 3.3-4.2 2.5s-1.1-3.2.5-4.2c1-.6 2.2-.3 2.8 0M10 10C8 9 6.7 7 7.5 5.8s3.2-1.1 4.2.5c.6 1 .3 2.2 0 2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="10" cy="10" r="1.2" fill="currentColor"/>
+                </svg>
+                พัดลม
+              </h2>
+              <p class="panel__subtitle">ระบาย CO₂ และอุณหภูมิ</p>
+            </div>
+          </div>
+          <dl class="rule-list">
+            <div class="rule-row">
+              <dt class="status-badge status-badge--normal">เปิดเมื่อ</dt>
+              <dd>อุณหภูมิ &gt; <strong><%= logic.fan.onTempAbove %> °C</strong><br>หรือ CO₂ &gt; <strong><%= logic.fan.onCo2Above %> ppm</strong></dd>
+            </div>
+            <div class="rule-row">
+              <dt class="status-badge status-badge--unknown">ปิดเมื่อ</dt>
+              <dd>อุณหภูมิ ≤ <strong><%= logic.fan.offTempAtOrBelow %> °C</strong><br>และ CO₂ ≤ <strong><%= logic.fan.offCo2AtOrBelow %> ppm</strong></dd>
+            </div>
+            <div class="rule-row">
+              <dt style="font-size:var(--text-xs);color:var(--color-text-muted);font-weight:600">หน่วงเวลา</dt>
+              <dd>เปิดอย่างน้อย <strong><%= logic.fan.minOnMinutes %> นาที</strong> · ปิดอย่างน้อย <strong><%= logic.fan.minOffMinutes %> นาที</strong></dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- เครื่องพ่นไอน้ำ -->
+        <section class="panel rule-card" aria-labelledby="mister-heading">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title" id="mister-heading">
+                <svg viewBox="0 0 20 20" fill="none" style="display:inline;width:20px;height:20px;vertical-align:middle;margin-right:6px" aria-hidden="true">
+                  <path d="M10 2s-5 4.6-5 8.3a5 5 0 0 0 10 0C15 6.6 10 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M7.5 12.5a2.5 2.5 0 0 0 3.8 1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                เครื่องพ่นไอน้ำ
+              </h2>
+              <p class="panel__subtitle">รักษาความชื้น</p>
+            </div>
+          </div>
+          <dl class="rule-list">
+            <div class="rule-row">
+              <dt class="status-badge status-badge--normal">เปิดเมื่อ</dt>
+              <dd>ความชื้น &lt; <strong><%= logic.mister.onHumidityBelow %> %</strong></dd>
+            </div>
+            <div class="rule-row">
+              <dt class="status-badge status-badge--unknown">ปิดเมื่อ</dt>
+              <dd>ความชื้น ≥ <strong><%= logic.mister.offHumidityAtOrAbove %> %</strong></dd>
+            </div>
+            <div class="rule-row">
+              <dt style="font-size:var(--text-xs);color:var(--color-text-muted);font-weight:600">หน่วงเวลา</dt>
+              <dd>เปิดอย่างน้อย <strong><%= logic.mister.minOnMinutes %> นาที</strong> · ปิดอย่างน้อย <strong><%= logic.mister.minOffMinutes %> นาที</strong></dd>
+            </div>
+            <div class="rule-row">
+              <dt style="font-size:var(--text-xs);color:var(--color-text-muted);font-weight:600">รอหลังพัดลม</dt>
+              <dd>รอ <strong><%= logic.mister.waitAfterFanMinutes %> นาที</strong> หลังพัดลมปิด ก่อนเปิดเครื่องพ่น</dd>
+            </div>
+          </dl>
+        </section>
+
+      </div>
+
+      <!-- ── เกณฑ์อันตราย CO₂ ── -->
+      <section class="panel" aria-labelledby="danger-heading" style="margin-top:var(--space-3)">
+        <div class="panel__header">
+          <h2 class="panel__title" id="danger-heading">เกณฑ์อันตราย CO₂</h2>
+        </div>
+        <p class="logic-warning">
+          หาก CO₂ ≥ <strong><%= logic.co2DangerAtOrAbove %> ppm</strong> ระบบแจ้งเตือนบนแดชบอร์ดทันที — ตรวจสอบการระบายอากาศ
+        </p>
+        <ul class="logic-points">
+          <li>ค่าปกติในโรงเรือน: &lt; 1,000 ppm</li>
+          <li>CO₂ สูงทำให้ดอกเห็ดยืดและบิดเบี้ยว</li>
+          <li>พัดลมจะเปิดอัตโนมัติเมื่อเกิน <%= logic.fan.onCo2Above %> ppm</li>
+        </ul>
+      </section>
+
+    </main>
+
+    <%- include('partials/footer') %>
+  </div>
+</body>
+</html>

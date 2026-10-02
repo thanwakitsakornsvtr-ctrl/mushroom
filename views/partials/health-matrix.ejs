@@ -1,0 +1,15 @@
+<%
+  // การ์ดกล่องควบคุม ESP32 — วางรวมกับการ์ดพัดลม/เครื่องพ่นไอน้ำ (อัปเดตโดย dashboard.client.js)
+  // ชื่อบอร์ด (deviceId) ไม่แสดงบนหน้า เก็บไว้ใน title ให้นักวิจัยเท่านั้น
+  var isUp = latest ? latest.online : false;
+%>
+<article class="actuator-card" id="esp32-health-item"<% if (latest) { %> title="<%= latest.deviceId %>"<% } %>>
+  <div class="actuator-card__header">
+    <span class="status-dot <%= isUp ? 'status-dot--online' : 'status-dot--offline' %>" data-role="dot" aria-hidden="true"></span>
+    <p class="actuator-card__label">กล่อง ESP32</p>
+    <span class="status-badge status-badge--<%= isUp ? 'normal' : 'high' %>" data-role="state"><%= isUp ? 'ทำงานอยู่' : 'ขาดการติดต่อ' %></span>
+  </div>
+  <p class="actuator-card__meta" data-role="meta">
+    <% if (latest) { %>ส่งค่าล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %><% } else { %>ยังไม่เคยติดต่อ<% } %>
+  </p>
+</article>

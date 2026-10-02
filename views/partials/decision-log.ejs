@@ -1,0 +1,38 @@
+<%
+  // decision-log partial
+  // decisions: array of { id, mode, situation, reasons, fanTarget, misterTarget, smoothed, classification, createdAt }
+%>
+<div class="table-wrap">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th scope="col">เวลา</th>
+        <th scope="col">สภาพที่เจอ</th>
+        <th scope="col">ระบบสั่ง</th>
+        <th scope="col">เพราะอะไร</th>
+      </tr>
+    </thead>
+    <tbody id="decision-log-body">
+      <% if (!decisions || decisions.length === 0) { %>
+        <tr class="empty-row"><td colspan="4">ยังไม่มีบันทึกการตัดสินใจ</td></tr>
+      <% } %>
+      <% if (decisions && decisions.length > 0) { %>
+      <% decisions.forEach(function(d) { %>
+      <tr>
+        <td title="<%= labels.fullTime(d.createdAt) %>"><%= labels.shortTime(d.createdAt, nowMs) %></td>
+        <td class="cell-wrap" title="<%= d.situation || '' %>"><%= labels.situation(d.situation) %></td>
+        <td class="cell-wrap" title="พัดลม: <%= labels.target(d.fanTarget) %>, เครื่องพ่นไอน้ำ: <%= labels.target(d.misterTarget) %>">
+          <span class="target target--<%= d.fanTarget %>"><%= labels.target(d.fanTarget) %>พัดลม</span>
+          <span class="target target--<%= d.misterTarget %>"><%= labels.target(d.misterTarget) %>เครื่องพ่น</span>
+        </td>
+        <td class="cell-wrap decision-reasons">
+          <% if (d.reasons && d.reasons.length > 0) { %>
+            <span title="<%= d.reasons.join(', ') %>"><%= labels.reasons(d.reasons) %></span>
+          <% } else { %>—<% } %>
+        </td>
+      </tr>
+      <% }); %>
+      <% } %>
+    </tbody>
+  </table>
+</div>

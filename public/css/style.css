@@ -1,0 +1,1008 @@
+/* =============================================================
+   DESIGN SYSTEM — โรงเห็ดนางฟ้า Monitoring
+   Theme  : Light Premium Earthy (not dark, matches system brand)
+   Rules  : 8-Point Grid · 60-30-10 Color · Hick-Hyman · Modular Scale 1.25 · WCAG AA
+   ============================================================= */
+
+/* ── 0. Fonts — โหลดใน head.ejs ที่เดียว (เดิม @import ซ้ำตรงนี้ ทำให้โหลดฟอนต์ 2 รอบ) ── */
+
+/* ── 1. DESIGN TOKENS ─────────────────────────────────────────────── */
+:root {
+
+  /* --- Color Palette — 60/30/10 Rule ---
+     60% Dominant  : bg + surface (warm off-white tones)
+     30% Secondary : text + borders + structure
+     10% Accent    : brand + status indicators
+  */
+
+  /* 60% — Background & Surface */
+  --color-bg:            #F5F0E8;   /* Warm Linen — page background */
+  --color-surface:       #FDFAF5;   /* Warm White — card surface */
+  --color-surface-alt:   #F0EAE0;   /* Warm Sand — inset / elevated */
+  --color-surface-glass: var(--color-surface); /* ทึบ — เลิกใช้ blur (backdrop-filter) เพราะหนักมากบนมือถือสเปคต่ำ */
+
+  /* 30% — Structure */
+  --color-border:        rgba(139, 110, 72, 0.15);  /* warm border */
+  --color-border-strong: rgba(139, 110, 72, 0.28);
+  --color-text:          #1C1008;   /* Deep Espresso — contrast 14.2:1 on bg ✓ WCAG AAA */
+  --color-text-muted:    #6B5540;   /* Warm Umber — contrast 4.71:1 on bg ✓ WCAG AA */
+  --color-text-faint:    #9C8470;   /* Muted Mocha — decorative only, ≥ 18pt */
+
+  /* 10% — Accent / Brand */
+  --color-brand:         #6B4226;   /* Rich Coffee Brown — brand identity */
+  --color-brand-hover:   #4F2F18;   /* Darker Coffee */
+  --color-brand-light:   rgba(107, 66, 38, 0.08);  /* brand tint bg */
+  --color-accent-green:  #2E7D52;   /* Forest Green — normal/success contrast 5.2:1 ✓ */
+  --color-accent-blue:   #1A5EA8;   /* Deep Blue — low state contrast 6.1:1 ✓ */
+  --color-accent-amber:  #B35A00;   /* Burnt Amber — high/warning contrast 5.0:1 ✓ */
+
+  /* Status chip backgrounds (soft tints) */
+  --color-normal-bg:     #D6EFDF;
+  --color-normal-text:   #1B5E3A;   /* contrast 5.8:1 on chip ✓ */
+  --color-low-bg:        #D6E8FB;
+  --color-low-text:      #0D4080;   /* contrast 6.4:1 ✓ */
+  --color-high-bg:       #FAE2D0;
+  --color-high-text:     #8B3000;   /* contrast 5.6:1 ✓ */
+  --color-unknown-bg:    #EDE7DC;
+  --color-unknown-text:  #5A4A38;   /* contrast 5.1:1 ✓ */
+
+  /* แถบเตือนข้อมูลเก่า / ขาดการติดต่อ */
+  --color-alert-bg:      #FBE9E4;
+  --color-alert-border:  rgba(170, 50, 20, 0.25);
+  --color-alert-text:    #8A2A10;
+
+  /* Metric brand colors (icon backgrounds) */
+  --color-metric-co2:    #7B5E3A;   /* warm brown */
+  --color-metric-temp:   #C05A32;   /* terracotta */
+  --color-metric-humid:  #2F7A87;   /* teal */
+
+  /* --- Typography — Modular Scale ratio 1.25 (Major Third) ---
+     Base: 16px
+     xs:   12.8px → 0.8rem
+     sm:   14.4px → 0.9rem   (rounding: 0.9rem)
+     base: 16px   → 1rem
+     md:   20px   → 1.25rem
+     lg:   25px   → 1.563rem
+     xl:   31.25px→ 1.953rem
+     2xl:  39px   → 2.441rem
+  */
+  --text-xs:   0.875rem;    /* 14px   — captions, labels (ไม่ต่ำกว่า 14px ให้ผู้สูงอายุอ่านได้) */
+  --text-sm:   0.9rem;      /* 14.4px — table, badge */
+  --text-base: 1rem;        /* 16px   — body */
+  --text-md:   1.25rem;     /* 20px   — summary value */
+  --text-lg:   1.563rem;    /* 25px   — panel heading */
+  --text-xl:   1.953rem;    /* 31.25px — stat card value */
+  --text-2xl:  2.441rem;    /* 39px   — hero number */
+
+  /* --- Spacing — 8-Point Grid (ALL spacing must use these vars) ---
+     Every padding, margin, gap = multiple of 8px
+  */
+  --space-1:  8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  40px;
+  --space-6:  48px;
+  --space-7:  56px;
+  --space-8:  64px;
+  --space-10: 80px;
+
+  /* --- Radius --- */
+  --radius-sm:  8px;
+  --radius-md:  16px;
+  --radius-lg:  14px;
+  --radius-xl:  16px;
+  --radius-pill: 999px;
+
+  /* --- Shadows (warm tinted) --- */
+  /* เงาระดับเดียวบางๆ — แยกการ์ดออกจากพื้นพอ ไม่ต้องลอย */
+  --shadow-sm:   0 1px 2px rgba(76, 44, 20, 0.05);
+  --shadow-md:   var(--shadow-sm);
+  --shadow-lg:   var(--shadow-sm);
+  --shadow-card: var(--shadow-sm);
+
+  /* --- Transitions --- */
+  --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Font families --- */
+  --font-body:    'Noto Sans Thai', 'Inter', system-ui, sans-serif;
+  --font-number:  'Inter', 'Noto Sans Thai', system-ui, sans-serif;
+  --font-heading: 'Noto Sans Thai', 'Inter', system-ui, sans-serif;
+}
+
+/* ── 2. RESET & BASE ──────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--color-text);
+}
+
+p { margin: 0; }
+img, svg { display: block; }
+
+/* Focus ring for a11y */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── 3. LAYOUT ────────────────────────────────────────────────────── */
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--space-3) var(--space-6);
+}
+
+.content {
+  padding-top: var(--space-3);
+}
+
+/* ── 4. NAVBAR ────────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  background: var(--color-bg, #F5F0E8);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  /* sticky needs negative margin trick on page container */
+  margin-left: calc(-1 * var(--space-3));
+  margin-right: calc(-1 * var(--space-3));
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navbar__brand-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.navbar__logo-mark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(107, 66, 38, 0.16);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(145deg, #FFF8ED 0%, #EADCCA 100%);
+  box-shadow: 0 8px 18px rgba(76, 44, 20, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  flex: 0 0 auto;
+}
+
+.navbar__logo {
+  width: 38px;
+  height: 38px;
+}
+
+.navbar__info { display: flex; flex-direction: column; gap: 2px; }
+
+.navbar__title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-brand);
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.navbar__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Right cluster: device meta + status */
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.navbar__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 6px var(--space-2);
+}
+
+.navbar__meta-label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.navbar__meta-value {
+  font-family: var(--font-number);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.navbar__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: 6px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  transition: border-color var(--transition-normal);
+}
+
+/* Live status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.status-dot--online {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+.status-dot--offline {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* ── 5. STATS GRID ────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* ── 6. STAT CARD (3-Zone Glassmorphism) ─────────────────────────── */
+.stat-card {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-card);
+  transition: background var(--transition-normal);
+}
+
+/* ข้อมูลเก่า — ตัวเลขจางลง แถบเป็นสีเทา ให้รู้ทันทีว่าไม่ใช่ค่าปัจจุบัน */
+.stat-card--stale { background: var(--color-surface-alt); }
+.stat-card--stale .stat-card__value,
+.stat-card--stale .stat-card__unit { color: var(--color-text-faint); }
+.stat-card--stale .stat-card__icon-wrap { opacity: 0.55; }
+
+/* Zone 1: Header */
+.stat-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.stat-card__icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  transition: opacity var(--transition-normal);
+}
+
+.stat-card__icon-wrap svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stat-card__icon-wrap--co2         { background: var(--color-metric-co2); }
+.stat-card__icon-wrap--temperature { background: var(--color-metric-temp); }
+.stat-card__icon-wrap--humidity    { background: var(--color-metric-humid); }
+
+.stat-card__label {
+  flex: 1;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Zone 2: Hero Value */
+.stat-card__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+}
+
+.stat-card__value {
+  font-family: var(--font-number);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  transition: color var(--transition-normal);
+}
+
+.stat-card__unit {
+  font-family: var(--font-number);
+  font-size: var(--text-md);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ── 6a. GAUGE (ช่วงปกติ + ตัวชี้ค่าปัจจุบัน) ───────────────────────── */
+.gauge { display: flex; flex-direction: column; gap: 6px; }
+
+.gauge__track {
+  position: relative;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.gauge__zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #A9D9BB;
+  border-radius: var(--radius-pill);
+}
+
+.stat-card--stale .gauge__zone { background: var(--color-border-strong); }
+
+.gauge__marker {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  border: 3px solid var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border-strong);
+  transform: translateY(-50%);
+  transition: left 400ms ease, background var(--transition-normal);
+}
+
+.gauge__marker[hidden] { display: none; }
+.gauge__marker--normal  { background: var(--color-accent-green); }
+.gauge__marker--high    { background: var(--color-accent-amber); }
+.gauge__marker--low     { background: var(--color-accent-blue); }
+.gauge__marker--unknown { background: var(--color-text-faint); }
+
+.gauge__caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ต่ำสุด/สูงสุด 24 ชม. */
+.stat-card__minmax {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px var(--space-2);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.stat-card__minmax-caption { font-weight: 600; }
+
+.stat-card__minmax-item strong {
+  font-family: var(--font-number);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+
+.status-badge--normal  { background: var(--color-normal-bg);  color: var(--color-normal-text); }
+.status-badge--low     { background: var(--color-low-bg);     color: var(--color-low-text); }
+.status-badge--high    { background: var(--color-high-bg);    color: var(--color-high-text); }
+.status-badge--unknown { background: var(--color-unknown-bg); color: var(--color-unknown-text); }
+
+/* ── 7. PANEL (Chart + Table containers) ─────────────────────────── */
+.panel {
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── 6b. SUMMARY (ป้ายสรุปสถานะบนสุด) ─────────────────────────────── */
+.summary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xl);
+  transition: background var(--transition-normal), border-color var(--transition-normal), color var(--transition-normal);
+}
+
+.summary--ok    { background: var(--color-normal-bg); border-color: rgba(46, 125, 82, 0.2);  color: var(--color-normal-text); }
+.summary--warn  { background: var(--color-high-bg);   border-color: rgba(179, 90, 0, 0.25);  color: var(--color-high-text); }
+.summary--alert { background: var(--color-alert-bg);  border-color: var(--color-alert-border); color: var(--color-alert-text); }
+
+.summary__icon svg {
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+}
+
+.summary__icon-warn,
+.summary--ok .summary__icon-ok { display: block; }
+.summary__icon-ok,
+.summary--ok .summary__icon-warn { display: none; }
+
+.summary__title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.summary__text {
+  font-size: var(--text-sm);
+  margin-top: 2px;
+  color: var(--color-text);
+}
+
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.panel__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.panel__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Chart legend */
+.legend {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.legend__dot--co2         { background: #7B5E3A; }
+.legend__dot--temperature { background: #C05A32; }
+.legend__dot--humidity    { background: #2F7A87; }
+
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+}
+
+/* ── 8. HISTORY TABLE ─────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  font-family: var(--font-number);
+}
+
+.history-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface-alt);
+}
+
+.history-table th {
+  text-align: left;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.history-table td {
+  padding: 10px var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  color: var(--color-text);
+  transition: background var(--transition-fast);
+}
+
+.history-table tbody tr:hover td { background: var(--color-surface-alt); }
+.history-table tbody tr:last-child td { border-bottom: none; }
+
+/* Table status coloring */
+.history-table td.status-high   { color: var(--color-high-text);   font-weight: 600; }
+.history-table td.status-low    { color: var(--color-low-text);    font-weight: 600; }
+.history-table td.status-normal { color: var(--color-accent-green); }
+
+/* เหตุผลยาวได้ ให้ตัดบรรทัดแทนการเลื่อนตารางไปด้านข้าง */
+.history-table td.cell-wrap {
+  white-space: normal;
+  min-width: 140px;
+}
+
+/* ชิปเปิด/ปิด ในบันทึกการตัดสินใจ */
+.target {
+  display: inline-block;
+  min-width: 40px;
+  margin: 2px 4px 2px 0;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-align: center;
+}
+.target--on  { background: var(--color-normal-bg);  color: var(--color-normal-text); }
+.target--off { background: var(--color-unknown-bg); color: var(--color-unknown-text); }
+
+.empty-row {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-5) !important;
+}
+
+/* แถวใหม่ค่อยๆ ปรากฏ — ไม่เด้ง */
+.history-table tbody tr.row-new {
+  animation: row-fade-in 200ms ease-out;
+}
+
+@keyframes row-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── 9. FOOTER ────────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-4);
+}
+
+.footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.footer__sep {
+  opacity: 0.4;
+}
+
+/* ── 10. ERROR PAGE ───────────────────────────────────────────────── */
+.error-page {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.error-page h1 {
+  font-size: var(--text-2xl);
+  color: var(--color-brand);
+}
+
+.btn {
+  margin-top: var(--space-2);
+  display: inline-block;
+  background: var(--color-brand);
+  color: #fff;
+  padding: 10px var(--space-3);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  transition: background var(--transition-fast);
+}
+
+.btn:hover { background: var(--color-brand-hover); }
+
+/* ── 11b. NAV TABS (สลับหน้า แดชบอร์ด / หลักการทำงาน) ──────────────── */
+.navbar__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+}
+
+.navbar__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar__tab:hover { color: var(--color-brand); }
+
+.navbar__tab--active {
+  background: var(--color-surface);
+  color: var(--color-brand);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── 11c. LOGIC PAGE (หลักการทำงาน) ──────────────────────────────── */
+.logic-flow {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  counter-reset: none;
+}
+
+.logic-step {
+  position: relative;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+}
+
+/* ลูกศรชี้ไปขั้นถัดไป */
+.logic-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: calc(-1 * var(--space-2) + 2px);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-faint);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+.logic-step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-1);
+}
+
+.logic-step__title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.logic-step__text {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.logic-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.rule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.rule-card .panel__subtitle { margin-bottom: var(--space-2); }
+
+.rule-list { margin: 0; }
+
+.rule-row {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: var(--space-1);
+  align-items: baseline;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.rule-row dt { margin: 0; }
+.rule-row dd { margin: 0; font-size: var(--text-sm); color: var(--color-text); }
+
+.logic-points {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.logic-points strong { color: var(--color-text); }
+
+.logic-warning {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-high-bg);
+  color: var(--color-high-text);
+  font-size: var(--text-sm);
+}
+
+/* ── 11d. RESEARCH DETAILS (ข้อมูลละเอียด พับได้) ─────────────────── */
+.research { padding: 0; }
+
+.research__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--radius-xl);
+}
+
+.research__summary::-webkit-details-marker { display: none; }
+.research__summary > span { display: flex; flex-direction: column; }
+.research__summary:hover .panel__title { color: var(--color-brand); }
+
+.research__chevron {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-normal);
+}
+
+.research[open] .research__chevron { transform: rotate(180deg); }
+
+.research__body {
+  padding: 0 var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.research__heading {
+  font-size: var(--text-base);
+  margin-top: var(--space-2);
+}
+
+/* ── 12. RESPONSIVE ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* ตัวหนังสือฐาน 17px บนมือถือ — ทุกขนาดใช้ rem จึงขยายตามทั้งหน้า */
+  html { font-size: 106.25%; }
+
+  .page { padding: 0 var(--space-2) var(--space-4); }
+
+  /* มือถือแถบบนสูง 3 แถว — ไม่ตรึงไว้ จะได้ไม่กินจอตอนเลื่อน (ป้ายสรุปบอกสถานะอยู่แล้ว) */
+  .navbar {
+    position: static;
+    margin-left: calc(-1 * var(--space-2));
+    margin-right: calc(-1 * var(--space-2));
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .navbar__meta, .navbar__status { padding: 4px 12px; }
+
+  /* แท็บลงไปอยู่บรรทัดใหม่เต็มความกว้าง กดง่ายด้วยนิ้ว */
+  .navbar__tabs { order: 3; width: 100%; }
+  .navbar__tab { flex: 1; min-height: 40px; }
+
+  .logic-flow { grid-template-columns: 1fr; }
+  .logic-step:not(:last-child)::after {
+    content: '↓';
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: calc(-1 * var(--space-2) + 2px);
+    transform: translateX(-50%);
+  }
+  .rule-grid { grid-template-columns: 1fr; gap: var(--space-2); }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+  }
+
+  /* การ์ดแบบแถว: [ไอคอน] ชื่อ+ค่า ............ [ป้าย]  แล้วเกจเต็มความกว้าง
+     ให้เห็นทั้ง 3 ค่าในจอแรกโดยไม่ต้องเลื่อน */
+  .stat-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: 12px;
+    row-gap: var(--space-1);
+    padding: 12px var(--space-2);
+  }
+  .stat-card__header { display: contents; }
+  .stat-card__icon-wrap { grid-column: 1; grid-row: 1 / span 2; align-self: center; }
+  .stat-card__label { grid-column: 2; grid-row: 1; font-size: var(--text-sm); line-height: 1.3; }
+  .stat-card .status-badge { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+  .stat-card__value-row { grid-column: 2; grid-row: 2; }
+  .stat-card .gauge,
+  .stat-card__minmax { grid-column: 1 / -1; }
+  .stat-card__value { font-size: var(--text-xl); }
+  .stat-card__unit { font-size: var(--text-base); }
+  .gauge { flex-direction: row; align-items: center; gap: var(--space-1); }
+  .gauge__track { flex: 1; }
+  .gauge__caption { white-space: nowrap; }
+  .stat-card__minmax { border-top: none; padding-top: 0; }
+
+  .summary { padding: var(--space-2); }
+  .summary__title { font-size: var(--text-base); }
+  .research__summary { padding: var(--space-2); }
+  .research__body { padding: 0 var(--space-2) var(--space-2); }
+
+  .panel__title { font-size: var(--text-md); }
+}
+
+@media (max-width: 480px) {
+  .navbar__title { font-size: var(--text-base); }
+  .navbar__subtitle { display: none; }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── 13. PRINT ────────────────────────────────────────────────────── */
+@media print {
+  .navbar { position: static; backdrop-filter: none; background: #fff; }
+  .stat-card, .panel { box-shadow: none; backdrop-filter: none; border: 1px solid #ccc; }
+}
+
+/* ── 14. ACTUATOR CARDS ───────────────────────────────────────────── */
+.actuator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-2);
+}
+
+.actuator-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+}
+
+.actuator-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.actuator-card__label {
+  flex: 1;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.actuator-card__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-1);
+}
+
+.actuator-card__error {
+  font-size: var(--text-xs);
+  color: var(--color-high-text);
+  background: var(--color-high-bg);
+  border-radius: var(--radius-sm);
+  padding: 4px var(--space-1);
+  margin: 0 0 var(--space-1);
+}
+
+/* ── ผู้ใช้ที่ตั้งค่าลด animation ในเครื่อง ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

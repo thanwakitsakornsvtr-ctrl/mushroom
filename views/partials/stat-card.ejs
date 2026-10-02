@@ -1,0 +1,68 @@
+<%
+  // stat-card partial — class และ data-role ต้องตรงกับที่ dashboard.client.js ใช้
+  var th = thresholds[metricKey] || {};
+  var displayValue = (value !== null && value !== undefined)
+    ? (metricKey === 'co2' ? Math.round(value).toString() : value.toFixed(1))
+    : null;
+
+  var badgeLabel = { normal: 'ปกติ', high: 'สูง', low: 'ต่ำ', unknown: '?' }[status] || '?';
+  var effectiveStatus = stale ? 'unknown' : status;
+
+  // min/max 24h
+  var minKey = 'min' + metricKey.charAt(0).toUpperCase() + metricKey.slice(1);
+  var maxKey = 'max' + metricKey.charAt(0).toUpperCase() + metricKey.slice(1);
+  var minVal = (stats && stats[minKey] !== null && stats[minKey] !== undefined) ? stats[minKey] : null;
+  var maxVal = (stats && stats[maxKey] !== null && stats[maxKey] !== undefined) ? stats[maxKey] : null;
+
+  // gauge
+  var hasGauge = th.normalMin !== undefined && th.normalMax !== undefined;
+  var gaugeMin  = hasGauge ? th.normalMin * 0.6 : 0;
+  var gaugeMax  = hasGauge ? th.normalMax * 1.4 : 100;
+  var zoneLeft  = hasGauge ? Math.max(0, Math.min(100, ((th.normalMin - gaugeMin) / (gaugeMax - gaugeMin)) * 100)) : 0;
+  var zoneWidth = hasGauge ? Math.max(0, Math.min(100 - zoneLeft, ((th.normalMax - th.normalMin) / (gaugeMax - gaugeMin)) * 100)) : 0;
+  var markerLeft = (hasGauge && value !== null && value !== undefined)
+    ? Math.max(0, Math.min(100, ((value - gaugeMin) / (gaugeMax - gaugeMin)) * 100))
+    : null;
+%>
+<article class="stat-card<% if (stale) { %> stat-card--stale<% } %>"
+         data-metric="<%= metricKey %>"
+         data-status="<%= effectiveStatus %>"
+         aria-label="<%= label %>">
+
+  <!-- Zone 1: Header -->
+  <div class="stat-card__header">
+    <div class="stat-card__icon-wrap stat-card__icon-wrap--<%= metricKey %>"><%- icon %></div>
+    <span class="stat-card__label"><%= label %></span>
+    <span class="status-badge status-badge--<%= effectiveStatus %>" data-role="status"><%= stale ? '?' : badgeLabel %></span>
+  </div>
+
+  <!-- Zone 2: Hero Value -->
+  <div class="stat-card__value-row">
+    <span class="stat-card__value" data-role="value"><%= displayValue !== null ? displayValue : '—' %></span>
+    <span class="stat-card__unit"><%= unit %></span>
+  </div>
+
+  <!-- Zone 3: Gauge -->
+  <% if (hasGauge) { %>
+  <div class="gauge">
+    <div class="gauge__track">
+      <div class="gauge__zone" style="left:<%= zoneLeft.toFixed(1) %>%;width:<%= zoneWidth.toFixed(1) %>%"></div>
+      <div class="gauge__marker gauge__marker--<%= effectiveStatus %>"
+           data-role="marker"
+           <% if (markerLeft === null || stale) { %>hidden<% } %>
+           style="left:<%= markerLeft !== null ? markerLeft.toFixed(1) : '0' %>%"></div>
+    </div>
+    <span class="gauge__caption"><%= th.normalMin %>–<%= th.normalMax %> <%= unit %></span>
+  </div>
+  <% } %>
+
+  <!-- Zone 4: Min/Max 24h -->
+  <% if (minVal !== null || maxVal !== null) { %>
+  <div class="stat-card__minmax">
+    <span class="stat-card__minmax-caption">24 ชม.</span>
+    <span class="stat-card__minmax-item">ต่ำสุด <strong data-role="min"><%= minVal !== null ? minVal : '—' %></strong></span>
+    <span class="stat-card__minmax-item">สูงสุด <strong data-role="max"><%= maxVal !== null ? maxVal : '—' %></strong></span>
+  </div>
+  <% } %>
+
+</article>

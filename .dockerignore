@@ -3,6 +3,7 @@ data
 logs
 .env*
 .git
+.github
 .agents
 .codex
 .aws
@@ -25,3 +26,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.md
+*.orig
+*.rej
+Desktop.ini

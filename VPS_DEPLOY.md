@@ -11,7 +11,15 @@
 - ติดตั้ง Docker Engine และ Compose plugin ตาม [คู่มือ Docker สำหรับ Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 - ตั้ง DNS A ของ `mushroom.kitsakorn.com` ให้ชี้ public IPv4 ของ VPS; เพิ่ม AAAA เฉพาะเมื่อ VPS และ Nginx รองรับ IPv6 แล้ว
 - เปิด inbound TCP 80/443 และพอร์ต SSH ที่ใช้งาน พอร์ต 8083 ใช้ภายในเครื่องผ่าน Nginx
-- นำ repo มาวางใน `/opt/server-ssr` หรือ directory ที่ต้องการ และเข้า directory นั้น
+- Clone เฉพาะ repo เว็บไปยัง directory ที่ต้องการ เช่น การติดตั้งใหม่ใช้:
+
+```bash
+git clone https://github.com/thanwakitsakornsvtr-ctrl/mushroom.git /opt/server-ssr
+cd /opt/server-ssr
+```
+
+ใช้ directory ที่ user ปัจจุบันมีสิทธิ์เขียน หรือให้ผู้ดูแลเตรียม `/opt/server-ssr` ให้ก่อน
+หากติดตั้งอยู่แล้ว ให้ใช้ directory และชื่อ Compose project เดิมเพื่อเก็บ volumes เดิม
 
 ทุกคำสั่งด้านล่างให้รันจาก root ของโปรเจ็ค และใช้ชื่อ directory/project เดิมเมื่ออัปเดตเพื่อให้ใช้ volumes เดิม
 
@@ -49,7 +57,7 @@ docker compose -f docker-compose.yml ps
 curl --fail http://127.0.0.1:8083/healthz
 ```
 
-รอให้ container แสดง `healthy` แล้วเปิด `http://localhost:8083/dashboard` เพื่อลองในเครื่อง local
+รอให้ container แสดง `healthy` แล้วเปิด `http://localhost:8083/` เพื่อลองในเครื่อง local
 
 เครื่องที่มี Compose รุ่นเก่าให้ใช้ `docker-compose -f docker-compose.yml` แทน `docker compose -f docker-compose.yml` ทุกคำสั่ง
 
@@ -68,12 +76,45 @@ docker-compose -f docker-compose.yml up -d --build
 
 ## 4. ติดตั้ง Nginx และ HTTPS
 
-ตัวอย่างสำหรับ Ubuntu/Debian ที่ใช้ Nginx บน host:
+ตัวอย่างสำหรับการติดตั้งใหม่บน Ubuntu/Debian ที่ใช้ Nginx บน host
+หากมี virtual host ของโดเมนนี้อยู่แล้ว ให้รวมค่าที่จำเป็นเข้ากับไฟล์เดิม:
 
 ```bash
 sudo apt update
 sudo apt install nginx certbot python3-certbot-nginx
-sudo cp deploy/nginx/mushroom.kitsakorn.com.conf /etc/nginx/sites-available/mushroom.kitsakorn.com
+sudoedit /etc/nginx/sites-available/mushroom.kitsakorn.com
+```
+
+ใส่ configuration ด้านล่างลงในไฟล์ที่เปิด โดยใช้โดเมนจริงของระบบ:
+
+```nginx
+server {
+    listen 80;
+    server_name mushroom.kitsakorn.com;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Connection "";
+
+    location / {
+        proxy_pass http://127.0.0.1:8083;
+    }
+
+    location = /api/sensors/events {
+        proxy_pass http://127.0.0.1:8083;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 75s;
+    }
+}
+```
+
+เปิดใช้งาน virtual host เมื่อยังไม่มี symlink ของโดเมนนี้ แล้วตรวจ config ก่อน reload:
+
+```bash
 sudo ln -s /etc/nginx/sites-available/mushroom.kitsakorn.com /etc/nginx/sites-enabled/mushroom.kitsakorn.com
 sudo nginx -t
 sudo systemctl reload nginx

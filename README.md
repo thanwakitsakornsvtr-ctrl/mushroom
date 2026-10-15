@@ -89,11 +89,25 @@ browser → dashboard → sensors / system public interfaces → EJS
 ใช้ Node.js ตาม `engines` ใน `package.json` (ตั้งแต่ 22.13.0):
 
 ```bash
+git clone https://github.com/thanwakitsakornsvtr-ctrl/mushroom.git mushroom-web
+cd mushroom-web
 npm ci
 cp .env.example .env
-# ตั้ง DEVICE_API_KEY เป็นค่าของระบบก่อนเริ่ม production
+```
+
+แก้ `.env` ก่อนเริ่มแอป: ตั้ง `DEVICE_API_KEY` เป็นคีย์ที่ตรงกับ ESP32
+หรือคีย์สำหรับทดลองของคุณเอง เช่น สร้างด้วย `openssl rand -hex 32`
+ค่า `NODE_ENV=production` ใน template จะปฏิเสธคีย์ placeholder
+สำหรับการพัฒนาในเครื่องให้ตั้ง `NODE_ENV=development`, `TRUST_PROXY=false`
+และ `SITE_URL=http://localhost:8083`
+เปลี่ยนข้อมูล `FARM_*` ตัวอย่างเป็นข้อมูลจริง หรือเว้นว่างเพื่อซ่อนช่องทางติดต่อ
+
+```bash
 npm run dev
 ```
+
+เปิด `http://localhost:8083/` และตรวจสถานะที่ `http://localhost:8083/healthz`
+หาก clone ไว้แล้ว ให้เริ่มจาก `npm ci` ภายใน root ของ repo เว็บ
 
 `npm start` เปิดแอปผ่าน `src/server.js` เช่นเดียวกับ Docker และ PM2
 อ่านวิธี deploy ได้ที่ [VPS_DEPLOY.md](VPS_DEPLOY.md) และ [RAILWAY_DEPLOY.md](RAILWAY_DEPLOY.md)
@@ -110,6 +124,19 @@ API key, HTTP response, SSE, หน้าเว็บ, rate limit และก�
 เทสการทำงานใช้ฐานข้อมูลและ log ใน temporary directory แยกต่อ test process
 และปิด HTTP/SSE, SQLite, logger ก่อนลบ directory เมื่อจบ
 จึงไม่เพิ่ม log หรือแก้ฐานข้อมูลใน `data/` ของโปรเจกต์
+
+## GitHub และ CI
+
+Repo นี้มีไฟล์ของ `mushroom-web` อยู่ที่ root โดยตรง
+เช่น `package.json`, `src/`, `views/` และ `public/`
+firmware ESP32 อยู่แยกจาก repo นี้
+
+[GitHub Actions](.github/workflows/ci.yml) รันเมื่อ push, เปิด/อัปเดต pull request
+หรือสั่งรันเอง โดยติดตั้งจาก `package-lock.json` ด้วย `npm ci`
+และรันเทสบน Node.js 22 กับ 24 เมื่อเทสผ่านทั้งสองรุ่นจึงตรวจ Docker build
+ใช้สิทธิ์ `contents: read` และไม่ต้องตั้ง repository secrets สำหรับเทส
+
+ดูขั้นตอนตรวจงานและอัปขึ้น remote ด้วยตัวเองที่ [GITHUB_UPLOAD.md](GITHUB_UPLOAD.md)
 
 ## ไฟล์ runtime และการเก็บกวาด
 

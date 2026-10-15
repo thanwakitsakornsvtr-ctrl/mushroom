@@ -1,12 +1,12 @@
-const sensorService = require('../services/sensorService');
-const systemService = require('../services/systemService');
-const thresholds = require('../config/thresholds');
-const config = require('../config');
-const plugView = require('../../public/js/plug-view');
-const labels = require('../../public/js/labels');
-const controlLogic = require('../config/controlLogic');
-const asyncHandler = require('../utils/asyncHandler');
-const site = require('../config/site');
+const sensorService = require('../sensors');
+const systemService = require('../system');
+const { thresholds } = sensorService;
+const config = require('../../shared/config');
+const plugView = require('../../../public/js/plug-view');
+const labels = require('../../../public/js/labels');
+const { controlLogic } = systemService;
+const asyncHandler = require('../../shared/utils/asyncHandler');
+const site = require('./site');
 
 // จำนวนแถวในตาราง "ประวัติล่าสุด" และ "ประวัติการตัดสินใจ" (ฝั่ง browser ใช้ค่าเดียวกันตอนเพิ่มแถวสด)
 const TABLE_ROWS = 5;

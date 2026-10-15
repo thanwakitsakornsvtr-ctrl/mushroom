@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 
 function loadConfig(overrides) {
-  return spawnSync(process.execPath, ['-e', "require('./src/config')"], {
+  return spawnSync(process.execPath, ['-e', "require('./src/shared/config')"], {
     cwd: require('node:path').resolve(__dirname, '..'),
     env: { ...process.env, NODE_ENV: 'production', DEVICE_API_KEY: 'valid-test-only-key', TRUST_PROXY: 'false', ...overrides },
     encoding: 'utf8',

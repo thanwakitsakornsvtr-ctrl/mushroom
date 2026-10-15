@@ -1,9 +1,9 @@
 const app = require('./app');
-const config = require('./config');
-const logger = require('./utils/logger');
-const scheduler = require('./services/scheduler');
-const sseHub = require('./services/sseHub');
-const db = require('./db');
+const config = require('./shared/config');
+const logger = require('./shared/utils/logger');
+const scheduler = require('./scheduler');
+const sseHub = require('./shared/events/sseHub');
+const db = require('./shared/db');
 
 const server = app.listen(config.port, () => {
   logger.info(`Mushroom dashboard server listening on port ${config.port}`, {
@@ -13,7 +13,7 @@ const server = app.listen(config.port, () => {
 
 // Node's default keepAliveTimeout (5s) is shorter than the SSE heartbeat interval,
 // which causes idle /api/sensors/events connections to be force-closed and reconnected
-// in a loop. Raise it well above the heartbeat interval (see services/sseHub.js).
+// in a loop. Raise it above the interval in shared/events/sseHub.js.
 server.keepAliveTimeout = 65000;
 server.headersTimeout = 66000;
 

@@ -1,5 +1,5 @@
-const repo = require('../db/systemRepository');
-const sseHub = require('./sseHub');
+const repo = require('./repository');
+const sseHub = require('../../shared/events/sseHub');
 
 function recordDecision(payload) {
   repo.insertDecision(payload);

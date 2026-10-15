@@ -1,4 +1,4 @@
-const db = require('./index');
+const db = require('./schema');
 
 const insertStmt = db.prepare(`
   INSERT INTO readings (device_id, co2, temperature, humidity)

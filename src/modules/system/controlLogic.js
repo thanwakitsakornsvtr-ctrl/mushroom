@@ -1,5 +1,5 @@
 // ค่าที่ ESP32 ใช้ตัดสินใจเปิด/ปิดพัดลมและเครื่องพ่นไอน้ำ — ใช้แสดงในหน้า "หลักการทำงาน" เท่านั้น
-// ต้นฉบับอยู่ใน Microcontroller/sketch_dht11/sketch_dht11.ino (server ไม่ได้ใช้ตัดสินใจ)
+// ต้นฉบับอยู่ใน firmware ESP32: sketch_dht11/sketch_dht11.ino (server ไม่ได้ใช้ตัดสินใจ)
 // ถ้าแก้ค่าใน firmware ให้แก้ไฟล์นี้ให้ตรงกันด้วย
 module.exports = {
   fan: {

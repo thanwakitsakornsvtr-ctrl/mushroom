@@ -53,5 +53,5 @@ module.exports = {
   readingBroadcastMs: Number(process.env.READING_BROADCAST_MS) || 5000,
   plugStaleSeconds: Number(process.env.PLUG_STALE_SECONDS) || 90,
   logLevel: process.env.LOG_LEVEL || 'info',
-  logDir: path.resolve(process.cwd(), 'logs'),
+  logDir: path.resolve(process.cwd(), process.env.LOG_DIR || 'logs'),
 };

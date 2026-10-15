@@ -4,7 +4,7 @@
  * ค่าที่เป็นข้อมูลจริงของฟาร์ม (ที่อยู่ เบอร์โทร LINE ฯลฯ) ตั้งผ่าน env เท่านั้น
  * ถ้าไม่ได้ตั้ง ส่วนนั้นจะถูกซ่อนบนหน้าเว็บ — ไม่มีข้อมูลสมมติแสดงให้คนทั่วไปเห็น
  */
-const config = require('./index');
+const config = require('../../shared/config');
 
 const env = (name) => (process.env[name] || '').trim();
 

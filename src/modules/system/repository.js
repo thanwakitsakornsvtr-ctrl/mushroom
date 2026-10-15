@@ -1,4 +1,4 @@
-const db = require('./index');
+const db = require('./schema');
 
 // ── control_decisions ──────────────────────────────────────────────────
 const insertDecisionStmt = db.prepare(`

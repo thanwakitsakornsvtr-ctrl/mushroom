@@ -1,29 +1,4 @@
-const { DatabaseSync } = require('node:sqlite');
-const fs = require('node:fs');
-const path = require('node:path');
-const config = require('../config');
-const logger = require('../utils/logger');
-
-fs.mkdirSync(path.dirname(config.dbPath), { recursive: true });
-
-const db = new DatabaseSync(config.dbPath);
-
-db.exec('PRAGMA journal_mode = WAL;');
-db.exec('PRAGMA foreign_keys = ON;');
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS readings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    device_id TEXT NOT NULL,
-    co2 INTEGER NOT NULL,
-    temperature REAL NOT NULL,
-    humidity REAL NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
-  );
-`);
-
-db.exec('CREATE INDEX IF NOT EXISTS idx_readings_created_at ON readings(created_at);');
-db.exec('CREATE INDEX IF NOT EXISTS idx_readings_device_id ON readings(device_id);');
+const db = require('../../shared/db');
 
 // ── Control engine decisions (ประเมิน+ตัดสินใจ) ──────────────────────────
 db.exec(`
@@ -68,7 +43,5 @@ db.exec(`
     changed_at TEXT NOT NULL
   );
 `);
-
-logger.info('SQLite database ready', { path: config.dbPath });
 
 module.exports = db;

@@ -7,8 +7,8 @@
  *   navOnline       {boolean}      – true = last reading is fresh
  *   navLastUpdated  {string|null}  – ISO timestamp of the last reading
  */
-const sensorService = require('../services/sensorService');
-const labels = require('../../public/js/labels');
+const sensorService = require('../sensors');
+const labels = require('../../../public/js/labels');
 
 module.exports = function navLocals(req, res, next) {
   const latest = sensorService.getLatestWithStatus();

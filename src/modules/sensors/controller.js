@@ -1,8 +1,8 @@
-const { readingSchema } = require('../validators/readingSchema');
-const sensorService = require('../services/sensorService');
-const sseHub = require('../services/sseHub');
-const asyncHandler = require('../utils/asyncHandler');
-const config = require('../config');
+const { readingSchema } = require('./validation');
+const sensorService = require('./service');
+const sseHub = require('../../shared/events/sseHub');
+const asyncHandler = require('../../shared/utils/asyncHandler');
+const config = require('../../shared/config');
 
 const createReading = asyncHandler(async (req, res) => {
   const parsed = readingSchema.safeParse(req.body);

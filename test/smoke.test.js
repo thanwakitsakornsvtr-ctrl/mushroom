@@ -1,36 +1,17 @@
 // Smoke test: เปิดแอปบน DB ชั่วคราว แล้วยิงทุกหน้าหลักตรวจสถานะ + องค์ประกอบสำคัญ (a11y/SEO/ไม่พึ่ง CDN)
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mushroom-test-'));
-process.env.DB_PATH = path.join(tmp, 'test.db');
-process.env.DEVICE_API_KEY = 'test-only-key';
-process.env.NODE_ENV = 'test';
-process.env.LOG_LEVEL = 'error';
-process.env.SITE_URL = 'https://example.test';
-process.env.TRUST_PROXY = '1';
-// Keep the no-contact fixture independent of the user's local .env examples.
-for (const key of ['FARM_ADDRESS', 'FARM_PHONE', 'FARM_LINE', 'FARM_FACEBOOK_URL', 'FARM_MAP_URL']) {
-  process.env[key] = '';
-}
+const runtime = require('./support/runtime')();
 
 const app = require('../src/app');
 
-let server;
 let base;
 
 test.before(async () => {
-  await new Promise((resolve) => { server = app.listen(0, '127.0.0.1', resolve); });
-  base = `http://127.0.0.1:${server.address().port}`;
+  base = await runtime.listen(app);
 });
 
-test.after(() => {
-  server.close();
-  fs.rmSync(tmp, { recursive: true, force: true });
-});
+test.after(() => runtime.cleanup());
 
 async function get(p, opts) {
   const res = await fetch(base + p, { redirect: 'manual', ...opts });
@@ -131,7 +112,7 @@ test('home shows the latest reading immediately after it is posted', async () =>
 });
 
 test('home labels old readings without presenting them as current conditions', async () => {
-  const db = require('../src/db');
+  const db = require('../src/shared/db');
   const reading = db.prepare('SELECT id, created_at FROM readings ORDER BY id DESC LIMIT 1').get();
   db.prepare('UPDATE readings SET created_at = ? WHERE id = ?')
     .run(new Date(Date.now() - 10 * 60 * 1000).toISOString(), reading.id);

@@ -1,6 +1,6 @@
-const systemService = require('../services/systemService');
-const asyncHandler = require('../utils/asyncHandler');
-const { decisionSchema, plugsSchema } = require('../validators/decisionSchema');
+const systemService = require('./service');
+const asyncHandler = require('../../shared/utils/asyncHandler');
+const { decisionSchema, plugsSchema } = require('./validation');
 
 const getActuators = asyncHandler(async (req, res) => {
   res.json({ actuators: systemService.getActuators() });

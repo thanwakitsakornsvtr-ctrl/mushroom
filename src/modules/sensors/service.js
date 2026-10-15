@@ -1,8 +1,8 @@
-const repo = require('../db/readingsRepository');
-const thresholds = require('../config/thresholds');
-const config = require('../config');
-const sseHub = require('./sseHub');
-const logger = require('../utils/logger');
+const repo = require('./repository');
+const thresholds = require('./thresholds');
+const config = require('../../shared/config');
+const sseHub = require('../../shared/events/sseHub');
+const logger = require('../../shared/utils/logger');
 
 function withStatus(reading) {
   if (!reading) return null;

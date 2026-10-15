@@ -4,15 +4,13 @@ const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 
-const config = require('./config');
-const requestLogger = require('./middleware/requestLogger');
-const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
-const navLocals = require('./middleware/navLocals');
-const site = require('./config/site');
-const dashboardRoutes = require('./routes/dashboard.routes');
-const sensorsRoutes = require('./routes/sensors.routes');
-const healthRoutes = require('./routes/health.routes');
-const systemRoutes = require('./routes/system.routes');
+const config = require('./shared/config');
+const requestLogger = require('./shared/middleware/requestLogger');
+const { notFoundHandler, errorHandler } = require('./shared/middleware/errorHandler');
+const dashboard = require('./modules/dashboard');
+const sensors = require('./modules/sensors');
+const healthRoutes = require('./shared/http/health.routes');
+const system = require('./modules/system');
 
 const app = express();
 
@@ -23,7 +21,7 @@ app.set('views', path.join(__dirname, '..', 'views'));
 // static ถูก cache 1 วันใน production — ต่อ ?v= ท้าย URL ของ css/js ให้เปลี่ยนทุกครั้งที่ server
 // เริ่มใหม่ (deploy) ไม่งั้น browser จะรัน dashboard.client.js ตัวเก่าค้างอยู่ได้ถึง 1 วัน
 app.locals.assetVersion = Date.now().toString(36);
-app.locals.site = site;
+app.locals.site = dashboard.site;
 
 app.use(helmet({
   // The same production container is also served over HTTP at localhost:8083.
@@ -64,12 +62,12 @@ Object.entries(fontPackages).forEach(([name, pkg]) => {
   app.use(`/vendor/fonts/${name}`, express.static(path.join(__dirname, '..', 'node_modules', pkg, 'files'), { maxAge: config.isProduction ? '30d' : 0, immutable: config.isProduction }));
 });
 
-app.use(navLocals);
+app.use(dashboard.navLocals);
 
-app.use('/api/sensors', sensorsRoutes);
-app.use('/api/system', systemRoutes);
+app.use('/api/sensors', sensors.router);
+app.use('/api/system', system.router);
 app.use('/healthz', healthRoutes);
-app.use('/', dashboardRoutes);
+app.use('/', dashboard.router);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

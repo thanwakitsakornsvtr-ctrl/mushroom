@@ -7,7 +7,7 @@
 })(typeof self !== 'undefined' ? self : this, function (Labels) {
   'use strict';
 
-  var LABEL = { fan: 'พัดลม', mister: 'เครื่องพ่นไอน้ำ' };
+  var LABEL = { fan: 'พัดลม', mister: 'เครื่องพ่นเพิ่มความชื้น' };
   var STATE_TEXT = { on: 'เปิด', off: 'ปิด' };
 
   function ageOf(plug, nowMs) {
@@ -21,7 +21,7 @@
     var lastKnownText = lastKnown ? 'ล่าสุดที่ทราบ: ' + lastKnown + ' (' + Labels.shortTime(plug.changedAt, nowMs) + ')' : '';
 
     if (!plug.reportedAt) {
-      return { online: false, badge: 'unknown', text: 'ไม่ทราบสถานะ', meta: 'ยังไม่มีรายงานจาก ESP32', error: null };
+      return { online: false, badge: 'unknown', text: 'ไม่ทราบสถานะ', meta: 'ยังไม่ได้รับสถานะปลั๊กจากกล่องควบคุม', error: null };
     }
 
     var ageSeconds = ageOf(plug, nowMs);
@@ -30,7 +30,7 @@
         online: false,
         badge: 'unknown',
         text: 'ไม่ทราบสถานะ',
-        meta: 'ไม่มีรายงานมา ' + Labels.duration(ageSeconds) + (lastKnownText ? ' · ' + lastKnownText : ''),
+        meta: 'ไม่ได้รับสถานะปลั๊กใหม่มา ' + Labels.duration(ageSeconds) + (lastKnownText ? ' · ' + lastKnownText : ''),
         error: null,
       };
     }
@@ -41,7 +41,7 @@
         badge: 'high',
         text: 'ติดต่อปลั๊กไม่ได้',
         meta: 'ตรวจล่าสุด ' + Labels.relativeTime(plug.reportedAt, nowMs) + (lastKnownText ? ' · ' + lastKnownText : ''),
-        error: plug.error || null,
+        error: 'ควรตรวจไฟและการเชื่อมต่อของปลั๊กที่โรงเรือน',
       };
     }
 
@@ -52,8 +52,8 @@
     return {
       online: true,
       badge: plug.state === 'on' ? 'normal' : 'unknown',
-      text: plug.state === 'on' ? 'เปิดอยู่' : 'ปิดอยู่',
-      meta: lastKnown + 'ตั้งแต่ ' + Labels.shortTime(plug.changedAt, nowMs) + ' · ตรวจล่าสุด ' + Labels.relativeTime(plug.reportedAt, nowMs),
+      text: plug.state === 'on' ? 'ปลั๊กเปิดอยู่' : 'ปลั๊กปิดอยู่',
+      meta: 'ปลั๊ก' + lastKnown + 'ตั้งแต่ ' + Labels.shortTime(plug.changedAt, nowMs) + ' · ได้รับสถานะล่าสุด ' + Labels.relativeTime(plug.reportedAt, nowMs),
       error: null,
     };
   }

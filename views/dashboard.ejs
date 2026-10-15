@@ -9,6 +9,11 @@
 
     <main class="content" id="main-content">
 
+      <header class="page-head">
+        <h1 class="page-head__title">สภาพโรงเรือน</h1>
+        <p class="page-head__lead">ได้รับข้อมูลล่าสุด <time id="reading-last-updated"<% if (latest) { %> datetime="<%= latest.createdAt %>" title="<%= labels.fullTime(latest.createdAt) %>"<% } %>><%= latest ? labels.relativeTime(latest.createdAt, nowMs) : 'ยังไม่มีข้อมูล' %></time></p>
+      </header>
+
       <%
         var stale = !latest || !latest.online;
         var staleSeconds = latest ? Math.max(0, Math.round((nowMs - new Date(latest.createdAt).getTime()) / 1000)) : 0;
@@ -17,10 +22,10 @@
       <%- include('partials/status-summary', { stale: stale, staleSeconds: staleSeconds }) %>
 
       <!-- ── ค่าเซนเซอร์ล่าสุด 3 ค่า + ต่ำสุด/สูงสุด 24 ชม. ── -->
-      <section class="stats-grid" aria-label="ค่าเซนเซอร์ล่าสุด">
+      <section class="stats-grid" aria-label="ค่าที่วัดได้ล่าสุด">
         <%- include('partials/stat-card', {
           metricKey: 'co2',
-          label: 'CO₂',
+          label: 'คาร์บอนไดออกไซด์ (CO₂)',
           value: latest ? latest.co2 : null,
           unit: 'ppm',
           status: latest ? latest.status.co2 : 'unknown',
@@ -42,7 +47,7 @@
         }) %>
         <%- include('partials/stat-card', {
           metricKey: 'humidity',
-          label: 'ความชื้น',
+          label: 'ความชื้นในอากาศ',
           value: latest ? latest.humidity : null,
           unit: '%',
           status: latest ? latest.status.humidity : 'unknown',
@@ -57,8 +62,8 @@
       <section class="panel" aria-labelledby="actuator-heading">
         <div class="panel__header">
           <div>
-            <h2 class="panel__title" id="actuator-heading">อุปกรณ์ในโรงเรือน</h2>
-            <p class="panel__subtitle">ESP32 เปิด/ปิดพัดลมและเครื่องพ่นไอน้ำให้อัตโนมัติ — หน้านี้ดูได้อย่างเดียว สั่งงานไม่ได้</p>
+            <h2 class="panel__title" id="actuator-heading">สถานะอุปกรณ์</h2>
+            <p class="panel__subtitle">กล่องควบคุมสั่งเปิด–ปิดอุปกรณ์อัตโนมัติ หน้านี้ใช้ดูข้อมูล สถานะเปิด–ปิดรายงานจากปลั๊ก ควรตรวจการทำงานของเครื่องที่โรงเรือนเมื่อพบปัญหา</p>
           </div>
         </div>
         <div class="actuator-grid" id="actuator-grid">
@@ -73,13 +78,13 @@
       <section class="panel" aria-labelledby="chart-heading">
         <div class="panel__header">
           <div>
-            <h2 class="panel__title" id="chart-heading">แนวโน้มย้อนหลัง 24 ชั่วโมง</h2>
-            <p class="panel__subtitle">จุดละค่าเฉลี่ย <%= Math.round(chartBucketSeconds / 60) %> นาที อัปเดตเองอัตโนมัติ</p>
+            <h2 class="panel__title" id="chart-heading">สภาพโรงเรือนย้อนหลัง 24 ชั่วโมง</h2>
+            <p class="panel__subtitle">แต่ละจุดแสดงค่าเฉลี่ยในช่วง <%= Math.round(chartBucketSeconds / 60) %> นาที กราฟเปลี่ยนเมื่อได้รับค่าใหม่</p>
           </div>
-          <div class="legend" role="list" aria-label="ตำนานกราฟ">
+          <div class="legend" role="list" aria-label="คำอธิบายเส้นกราฟ">
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--co2" aria-hidden="true"></span>
-              <span>CO₂</span>
+              <span>คาร์บอนไดออกไซด์ (CO₂)</span>
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--temperature" aria-hidden="true"></span>
@@ -87,12 +92,12 @@
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--humidity" aria-hidden="true"></span>
-              <span>ความชื้น</span>
+              <span>ความชื้นในอากาศ</span>
             </div>
           </div>
         </div>
         <div class="chart-wrap">
-          <canvas id="history-chart" role="img" aria-label="กราฟแนวโน้มค่าเซนเซอร์ย้อนหลัง 24 ชั่วโมง" aria-describedby="chart-summary"></canvas>
+          <canvas id="history-chart" role="img" aria-label="กราฟค่าที่วัดได้ย้อนหลัง 24 ชั่วโมง" aria-describedby="chart-summary"></canvas>
           <p class="sr-only" id="chart-summary">
             <% if (stats && stats.minCo2 !== null && stats.minCo2 !== undefined) { %>
               ช่วง 24 ชั่วโมงที่ผ่านมา CO₂ อยู่ระหว่าง <%= stats.minCo2 %> ถึง <%= stats.maxCo2 %> ppm, อุณหภูมิ <%= stats.minTemperature %> ถึง <%= stats.maxTemperature %> °C, ความชื้น <%= stats.minHumidity %> ถึง <%= stats.maxHumidity %> %
@@ -105,8 +110,8 @@
       <details class="panel research" id="research-details">
         <summary class="research__summary">
           <span>
-            <span class="panel__title">ข้อมูลละเอียด</span>
-            <span class="panel__subtitle">ค่าที่วัดได้ล่าสุดและบันทึกการตัดสินใจของระบบ <%= tableRows %> รายการ — สำหรับนักวิจัย</span>
+            <span class="panel__title">ประวัติการวัดและการสั่งงาน</span>
+            <span class="panel__subtitle">ดูค่าที่วัดและคำสั่งเปิด–ปิดอุปกรณ์ <%= tableRows %> รายการล่าสุด</span>
           </span>
           <svg class="icon research__chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
         </summary>
@@ -118,9 +123,9 @@
             <thead>
               <tr>
                 <th scope="col">เวลา</th>
-                <th scope="col">CO₂ (ppm)</th>
+                <th scope="col">คาร์บอนไดออกไซด์ (ppm)</th>
                 <th scope="col">อุณหภูมิ (°C)</th>
-                <th scope="col">ความชื้น (%)</th>
+                <th scope="col">ความชื้นในอากาศ (%)</th>
               </tr>
             </thead>
             <tbody id="history-table-body">

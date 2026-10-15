@@ -1,9 +1,10 @@
 {
   "name": "โรงเห็ดนางฟ้า กันทรลักษ์",
   "short_name": "โรงเห็ดนางฟ้า",
-  "description": "เฝ้าระวังสภาพโรงเรือนเห็ดนางฟ้าแบบเรียลไทม์",
+  "description": "ดูสภาพโรงเรือนเห็ดนางฟ้าและสถานะอุปกรณ์ พร้อมเวลาได้รับข้อมูลล่าสุด",
   "lang": "th",
-  "start_url": "/dashboard",
+  "id": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F5F0E8",

@@ -8,26 +8,43 @@
   'use strict';
 
   var SITUATION = {
-    IDLE: 'ค่าปกติ เครื่องพัก',
+    IDLE: 'ค่าที่วัดอยู่ในช่วงที่กำหนด',
     VENTILATE_COOLING: 'ร้อนหรืออากาศอับ ต้องเปิดพัดลม',
     VENTILATE_SHORT: 'อากาศเริ่มอับ ต้องถ่ายเทอากาศ',
     VENTILATE_URGENT: 'อากาศอับมาก ต้องเปิดพัดลมด่วน',
-    MISTING: 'อากาศแห้ง ต้องพ่นไอน้ำ',
-    SENSOR_STALE: 'กล่องวัดค่าเงียบ ระบบหยุดสั่งงานเพื่อความปลอดภัย',
+    MISTING: 'อากาศแห้ง ต้องเพิ่มความชื้น',
+    SENSOR_STALE: 'ไม่ได้รับค่าจากเครื่องวัด ระบบหยุดสั่งงาน',
   };
 
   var REASON = {
-    co2_danger: 'อากาศอับมากเกินไป',
-    co2_high: 'อากาศอับ',
+    co2_danger: 'คาร์บอนไดออกไซด์สูงถึงระดับแจ้งเตือนของระบบ',
+    co2_high: 'คาร์บอนไดออกไซด์สูงกว่าที่กำหนด',
     temp_high: 'อุณหภูมิสูง ร้อนเกินไป',
     humidity_low: 'ความชื้นต่ำ อากาศแห้ง',
     humidity_high_skip_mist: 'ความชื้นพอแล้ว เลยไม่พ่นเพิ่ม',
-    sensor_stale: 'กล่องวัดค่าไม่ส่งข้อมูล',
+    sensor_stale: 'ไม่ได้รับค่าจากเครื่องวัด',
   };
 
   var TARGET = { on: 'เปิด', off: 'ปิด' };
 
-  var STATUS = { normal: 'ปกติ', high: 'สูงเกิน', low: 'ต่ำเกิน', unknown: 'ไม่มีข้อมูล', stale: 'ข้อมูลเก่า' };
+  var STATUS = { normal: 'อยู่ในช่วงที่กำหนด', high: 'สูงกว่าที่กำหนด', low: 'ต่ำกว่าที่กำหนด', unknown: 'ยังไม่มีข้อมูล', stale: 'ยังไม่ได้รับค่าใหม่' };
+  var METRIC_STATUS = {
+    co2: { normal: 'อยู่ในช่วงที่กำหนด', high: 'ก๊าซสูงกว่าที่กำหนด' },
+    temperature: { normal: 'อยู่ในช่วงที่กำหนด', high: 'ร้อนกว่าที่กำหนด', low: 'เย็นกว่าที่กำหนด' },
+    humidity: { normal: 'อยู่ในช่วงที่กำหนด', high: 'ชื้นกว่าที่กำหนด', low: 'อากาศแห้ง' },
+  };
+
+  function metricStatus(metric, status, stale, hasValue) {
+    if (!hasValue) return STATUS.unknown;
+    if (stale) return STATUS.stale;
+    return (METRIC_STATUS[metric] || {})[status] || STATUS[status] || STATUS.unknown;
+  }
+
+  function connection(o) {
+    if (o.connected === false) return 'หน้าเว็บรับข้อมูลใหม่ไม่ได้';
+    if (!o.hasData) return 'ยังไม่มีข้อมูล';
+    return o.online ? 'ได้รับข้อมูลต่อเนื่อง' : 'ไม่ได้รับข้อมูลใหม่';
+  }
 
   var TZ = 'Asia/Bangkok';
 
@@ -41,19 +58,19 @@
     return String(Math.round(Number(v) * f) / f);
   }
 
-  function situation(code) { return SITUATION[code] || code || '-'; }
+  function situation(code) { return SITUATION[code] || 'ยังไม่มีคำอธิบายสภาพนี้'; }
 
   function reasons(codes) {
     if (!codes || codes.length === 0) return '-';
-    return codes.map(function (c) { return REASON[c] || c; }).join(', ');
+    return codes.map(function (c) { return REASON[c] || 'ยังไม่มีคำอธิบายเหตุผลนี้'; }).join(', ');
   }
 
-  function target(code) { return TARGET[code] || code || '-'; }
+  function target(code) { return TARGET[code] || 'ไม่ทราบคำสั่ง'; }
 
   function actionSummary(fanTarget, misterTarget) {
     var actions = [];
     if (fanTarget) actions.push(target(fanTarget) + 'พัดลม');
-    if (misterTarget) actions.push(target(misterTarget) + 'เครื่องพ่นไอน้ำ');
+    if (misterTarget) actions.push(target(misterTarget) + 'เครื่องพ่นเพิ่มความชื้น');
     return actions.length ? actions.join(' · ') : '-';
   }
 
@@ -117,25 +134,32 @@
   // "ปกติ 80–95 %" / CO₂ ไม่มีขั้นต่ำ → "ปกติไม่เกิน 1000 ppm"
   function normalRange(th, unit) {
     if (!th) return '';
-    if (!th.normalMin) return 'ปกติไม่เกิน ' + th.normalMax + ' ' + unit;
-    return 'ปกติ ' + th.normalMin + '–' + th.normalMax + ' ' + unit;
+    if (!th.normalMin) return 'กำหนดไม่เกิน ' + th.normalMax + ' ' + unit;
+    return 'ช่วงที่กำหนด ' + th.normalMin + '–' + th.normalMax + ' ' + unit;
   }
 
   /* ── ป้ายสรุปสถานะโรงเรือน (ประโยคเดียวบนสุดของหน้า) ───────────────
      o = { hasData, stale, staleSeconds, values, status, co2DangerAt, fan, mister }
      fan/mister = { on, known, unreachable } จาก PlugView.brief()
      คืน { tone: 'ok' | 'warn' | 'alert', title, text } */
-  var DEVICE = { fan: 'พัดลม', mister: 'เครื่องพ่นไอน้ำ' };
-  var CHECK_POWER = 'ลองตรวจไฟและ Wi-Fi ของกล่อง ESP32 ในโรงเรือน';
+  var DEVICE = { fan: 'พัดลม', mister: 'เครื่องพ่นเพิ่มความชื้น' };
+  var CHECK_POWER = 'ควรตรวจไฟและการเชื่อมต่ออินเทอร์เน็ตของกล่องควบคุมโรงเรือน';
 
   function summary(o) {
+    if (o.connected === false) {
+      return {
+        tone: 'warn',
+        title: 'ขณะนี้หน้าเว็บรับข้อมูลใหม่ไม่ได้',
+        text: 'ตรวจการเชื่อมต่ออินเทอร์เน็ตของเครื่องที่ใช้เปิดเว็บ ' + (o.hasData ? 'ตัวเลขและสถานะด้านล่างเป็นข้อมูลล่าสุดที่ได้รับ' : 'ขณะนี้ยังไม่มีข้อมูลให้แสดง') + ' หน้าเว็บจะลองเชื่อมต่อใหม่อัตโนมัติ',
+      };
+    }
     if (!o.hasData) {
       return { tone: 'alert', title: 'ยังไม่เคยได้รับข้อมูลจากโรงเรือน', text: CHECK_POWER };
     }
     if (o.stale) {
       return {
         tone: 'alert',
-        title: 'ขาดการติดต่อกับโรงเรือนมา ' + duration(o.staleSeconds),
+        title: 'ไม่ได้รับข้อมูลใหม่จากโรงเรือนมา ' + duration(o.staleSeconds),
         text: 'ตัวเลขด้านล่างเป็นค่าล่าสุดที่ได้รับ ไม่ใช่ค่าตอนนี้ — ' + CHECK_POWER,
       };
     }
@@ -150,7 +174,7 @@
     var co2Danger = s.co2 === 'high' && o.values.co2 >= o.co2DangerAt;
 
     if (s.co2 === 'high') {
-      problems.push(co2Danger ? 'CO₂ สูงถึงขั้นอันตราย' : 'อากาศอับ (CO₂ สูง)');
+      problems.push(co2Danger ? 'คาร์บอนไดออกไซด์สูงถึงระดับแจ้งเตือนของระบบ' : 'คาร์บอนไดออกไซด์สูงกว่าที่กำหนด');
       needFan = true;
       if (co2Danger) tone = 'alert';
     }
@@ -159,37 +183,33 @@
     if (s.humidity === 'low') { problems.push('อากาศแห้งเกินไป'); needMister = true; }
     if (s.humidity === 'high') { problems.push('ชื้นเกินไป'); unhandled = true; }
 
-    function respond(key, doing) {
-      var p = o[key] || {};
-      if (p.unreachable) return; // แจ้งรวมด้านล่าง
-      if (!p.known) actions.push('ไม่ทราบสถานะ' + DEVICE[key]);
-      else if (p.on) actions.push(DEVICE[key] + doing);
-      else actions.push('ระบบจะเปิด' + DEVICE[key] + 'ให้อัตโนมัติ');
-    }
-    if (needFan) respond('fan', 'กำลังเปิดระบายอากาศ');
-    if (needMister) {
-      if (co2Danger) actions.push('งดพ่นไอน้ำชั่วคราวเพราะ CO₂ สูง');
-      else respond('mister', 'กำลังพ่นเพิ่มความชื้น');
-    }
-    if (unhandled) actions.push('ข้อนี้ระบบแก้เองไม่ได้ ควรเข้าไปดูที่โรงเรือน');
-
     ['fan', 'mister'].forEach(function (key) {
-      if (o[key] && o[key].unreachable) {
+      var p = o[key] || {};
+      if (p.unreachable) {
         actions.push('ติดต่อปลั๊ก' + DEVICE[key] + 'ไม่ได้');
         if (tone === 'ok') tone = 'warn';
+      } else if (!p.known) {
+        actions.push('ยังไม่ทราบสถานะปลั๊ก' + DEVICE[key]);
+        if (tone === 'ok') tone = 'warn';
+      } else {
+        actions.push('ปลั๊ก' + DEVICE[key] + (p.on ? 'เปิดอยู่' : 'ปิดอยู่'));
       }
     });
+    if (needFan) actions.push('ควรตรวจการระบายอากาศที่โรงเรือน');
+    if (needMister && !co2Danger) actions.push('ควรตรวจการเพิ่มความชื้นที่โรงเรือน');
+    if (unhandled) actions.push('ควรตรวจสภาพโรงเรือนเพิ่มเติม');
+
+    if (['co2', 'temperature', 'humidity'].some(function (key) {
+      return ['normal', 'low', 'high'].indexOf(s[key]) === -1;
+    })) {
+      problems.push('ข้อมูลที่วัดได้ยังไม่ครบ');
+    }
 
     if (problems.length === 0) {
-      if (actions.length === 0) {
-        ['fan', 'mister'].forEach(function (key) {
-          if (o[key] && o[key].known && o[key].on) actions.push('ตอนนี้' + DEVICE[key] + 'เปิดอยู่');
-        });
-      }
       return {
         tone: tone,
-        title: 'สภาพในโรงเรือนปกติดี',
-        text: actions.length ? actions.join(' · ') : 'ไม่ต้องทำอะไร ระบบคอยดูแลให้อัตโนมัติ',
+        title: 'ค่าที่วัดได้อยู่ในช่วงที่กำหนด',
+        text: actions.join(' · '),
       };
     }
 
@@ -202,6 +222,8 @@
     REASON: REASON,
     TARGET: TARGET,
     STATUS: STATUS,
+    metricStatus: metricStatus,
+    connection: connection,
     value: value,
     situation: situation,
     reasons: reasons,

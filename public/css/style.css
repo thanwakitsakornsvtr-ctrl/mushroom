@@ -225,11 +225,14 @@ a { color: var(--color-forest-text); }
 
 /* Zone 1: Header */
 .stat-card__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
 }
+
+.stat-card__header .status-badge { grid-column: 2; justify-self: start; }
 
 .stat-card__icon-wrap {
   width: 40px;
@@ -251,10 +254,19 @@ a { color: var(--color-forest-text); }
 
 .stat-card__label {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text);
 }
+
+.stat-card__help {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.stat-card .status-badge { max-width: 100%; white-space: normal; }
 
 /* Zone 2: Hero Value */
 .stat-card__value-row {
@@ -723,12 +735,13 @@ a { color: var(--color-forest-text); }
   .stat-card .status-badge { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
   .stat-card__value-row { grid-column: 2; grid-row: 2; }
   .stat-card .gauge,
-  .stat-card__minmax { grid-column: 1 / -1; }
+  .stat-card__minmax,
+  .stat-card__help { grid-column: 1 / -1; }
   .stat-card__value { font-size: var(--text-xl); }
   .stat-card__unit { font-size: var(--text-base); }
-  .gauge { flex-direction: row; align-items: center; gap: var(--space-1); }
-  .gauge__track { flex: 1; }
-  .gauge__caption { white-space: nowrap; min-width: 8.5em; text-align: right; }
+  .gauge { flex-direction: column; gap: var(--space-1); }
+  .gauge__caption { white-space: normal; }
+  .stat-card .status-badge { max-width: 9em; text-align: center; }
   .stat-card__minmax { border-top: none; padding-top: 0; }
 
   .summary { padding: var(--space-2); }
@@ -1126,11 +1139,13 @@ a { color: var(--color-forest-text); }
 .actuator-card__label { min-width: 0; }
 /* ป้ายสถานะบอกครบแล้ว — จุดสีซ่อนไว้ (JS ยังอัปเดต class ได้ตามเดิม) กันชื่ออุปกรณ์ตกบรรทัด */
 .actuator-card__header .status-dot { display: none; }
-.actuator-card__header .status-badge { white-space: nowrap; }
+.actuator-card__header { flex-wrap: wrap; }
+.actuator-card__header .status-badge { white-space: normal; max-width: 100%; }
 
 /* ── 22. RESPONSIVE (กลาง: แท็บเล็ต) ──────────────────────────────── */
 @media (max-width: 960px) {
-  .site-header__inner { gap: var(--space-2); }
+  .site-header__inner { gap: var(--space-2); grid-template-columns: 1fr auto; }
+  .site-nav { grid-column: 1 / -1; grid-row: 2; }
   .site-status__meta { display: none; }
   .hero__inner { grid-template-columns: 1fr; gap: var(--space-4); }
   .hero__art { min-height: 300px; order: -1; }
@@ -1148,6 +1163,8 @@ a { color: var(--color-forest-text); }
   .brand__name { font-size: var(--text-base); }
 
   .site-nav {
+    grid-column: auto;
+    grid-row: auto;
     position: fixed;
     left: 0;
     right: 0;
@@ -1185,6 +1202,10 @@ a { color: var(--color-forest-text); }
 
 @media (max-width: 400px) {
   .brand__area { display: none; }
+  .site-header__inner { gap: var(--space-1); }
+  .site-status__pill { max-width: 11em; white-space: normal; padding: 4px var(--space-1); }
+  .stat-card { column-gap: 8px; }
+  .stat-card .status-badge { max-width: 7em; }
   .hero__chip--co2 { left: -4px; }
   .hero__chip--temp { right: -4px; }
 }

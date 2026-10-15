@@ -7,10 +7,10 @@
   <div class="actuator-card__header">
     <span class="actuator-card__icon" aria-hidden="true"><svg class="icon"><use href="#i-chip"/></svg></span>
     <span class="status-dot <%= isUp ? 'status-dot--online' : 'status-dot--offline' %>" data-role="dot" aria-hidden="true"></span>
-    <p class="actuator-card__label">กล่อง ESP32</p>
-    <span class="status-badge status-badge--<%= isUp ? 'normal' : 'high' %>" data-role="state"><%= isUp ? 'ทำงานอยู่' : 'ขาดการติดต่อ' %></span>
+    <p class="actuator-card__label">กล่องควบคุมโรงเรือน</p>
+    <span class="status-badge status-badge--<%= isUp ? 'normal' : 'unknown' %>" data-role="state"><%= isUp ? 'ส่งข้อมูลอยู่' : (latest ? 'ไม่ได้รับข้อมูลใหม่' : 'ยังไม่มีข้อมูล') %></span>
   </div>
   <p class="actuator-card__meta" data-role="meta">
-    <% if (latest) { %>ส่งค่าล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %><% } else { %>ยังไม่เคยติดต่อ<% } %>
+    <% if (latest) { %>ได้รับข้อมูลล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %><% } else { %>ยังไม่เคยได้รับข้อมูล<% } %>
   </p>
 </article>

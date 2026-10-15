@@ -7,23 +7,23 @@
     <thead>
       <tr>
         <th scope="col">เวลา</th>
-        <th scope="col">สภาพที่เจอ</th>
-        <th scope="col">ระบบสั่ง</th>
-        <th scope="col">เพราะอะไร</th>
+        <th scope="col">สภาพโรงเรือน</th>
+        <th scope="col">คำสั่งเปิด–ปิด</th>
+        <th scope="col">เหตุผล</th>
       </tr>
     </thead>
     <tbody id="decision-log-body">
       <% if (!decisions || decisions.length === 0) { %>
-        <tr class="empty-row"><td colspan="4">ยังไม่มีบันทึกการตัดสินใจ</td></tr>
+        <tr class="empty-row"><td colspan="4">ยังไม่มีบันทึกการสั่งเปิด–ปิดอุปกรณ์</td></tr>
       <% } %>
       <% if (decisions && decisions.length > 0) { %>
       <% decisions.forEach(function(d) { %>
       <tr>
         <td title="<%= labels.fullTime(d.createdAt) %>"><%= labels.shortTime(d.createdAt, nowMs) %></td>
         <td class="cell-wrap" title="<%= d.situation || '' %>"><%= labels.situation(d.situation) %></td>
-        <td class="cell-wrap" title="พัดลม: <%= labels.target(d.fanTarget) %>, เครื่องพ่นไอน้ำ: <%= labels.target(d.misterTarget) %>">
+        <td class="cell-wrap" title="พัดลม: <%= labels.target(d.fanTarget) %>, เครื่องพ่นเพิ่มความชื้น: <%= labels.target(d.misterTarget) %>">
           <span class="target target--<%= d.fanTarget %>"><%= labels.target(d.fanTarget) %>พัดลม</span>
-          <span class="target target--<%= d.misterTarget %>"><%= labels.target(d.misterTarget) %>เครื่องพ่น</span>
+          <span class="target target--<%= d.misterTarget %>"><%= labels.target(d.misterTarget) %>เครื่องพ่นเพิ่มความชื้น</span>
         </td>
         <td class="cell-wrap decision-reasons">
           <% if (d.reasons && d.reasons.length > 0) { %>

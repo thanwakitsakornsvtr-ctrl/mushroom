@@ -4,7 +4,6 @@
   /* ── Constants ──────────────────────────────────────────────────── */
   /* คำแปล/รูปแบบเวลาใช้ร่วมกับ SSR อยู่ใน /js/labels.js */
   var Labels = window.Labels;
-  var STATUS_LABEL = Labels.STATUS;
 
   /* ── Parse Initial SSR Data ─────────────────────────────────────── */
   var initialData = { latest: null, chartSeries: [], chartBucketSeconds: 300, stats: null, thresholds: {}, deviceId: null };
@@ -34,6 +33,8 @@
   var deviceOfflineSeconds = initialData.deviceOfflineSeconds || 60;
   var latestReading = initialData.latest || null;
   var lastReadingAt = latestReading ? latestReading.createdAt : null;
+  var streamConnected = true;
+  var eventSource = null;
   var co2DangerAt = initialData.co2DangerAt || 1500;
   var plugsByDevice = {};
   (initialData.plugs || []).forEach(function (p) { plugsByDevice[p.device] = p; });
@@ -42,6 +43,7 @@
   var connectionDot   = document.getElementById('connection-dot');
   var connectionLabel = document.getElementById('connection-label');
   var navLastUpdated  = document.getElementById('nav-last-updated');
+  var readingLastUpdated = document.getElementById('reading-last-updated');
   var historyTableBody = document.getElementById('history-table-body');
   var summaryEl       = document.getElementById('status-summary');
   var esp32Card       = document.getElementById('esp32-health-item');
@@ -58,38 +60,43 @@
 
   /* ── Connection State ───────────────────────────────────────────── */
   function setConnectionState(online) {
-    connectionDot.classList.toggle('status-dot--online',  online);
-    connectionDot.classList.toggle('status-dot--offline', !online);
-    connectionLabel.textContent = online ? 'ออนไลน์' : 'ขาดการติดต่อ';
+    connectionDot.classList.toggle('status-dot--online', online && streamConnected);
+    connectionDot.classList.toggle('status-dot--offline', !online || !streamConnected);
+    connectionLabel.textContent = Labels.connection({ hasData: !!latestReading, online: online, connected: streamConnected });
   }
 
   /* "x นาทีที่แล้ว" ต้องนับใหม่เรื่อยๆ — เรียกจาก refreshLiveness ทุก 5 วิ */
   function renderLastUpdated() {
-    if (!navLastUpdated) return;
-    if (!lastReadingAt) {
-      navLastUpdated.textContent = 'ยังไม่มีข้อมูล';
-      navLastUpdated.removeAttribute('title');
-      return;
-    }
-    navLastUpdated.textContent = Labels.relativeTime(lastReadingAt, serverNow());
-    navLastUpdated.title = formatThaiTime(lastReadingAt);
+    [navLastUpdated, readingLastUpdated].forEach(function (element) {
+      if (!element) return;
+      element.textContent = lastReadingAt ? Labels.relativeTime(lastReadingAt, serverNow()) : 'ยังไม่มีข้อมูล';
+      if (lastReadingAt) {
+        element.title = formatThaiTime(lastReadingAt);
+        if (element.tagName === 'TIME') element.dateTime = lastReadingAt;
+      } else {
+        element.removeAttribute('title');
+        element.removeAttribute('datetime');
+      }
+    });
   }
 
   /* ESP32 เงียบเกิน deviceOfflineSeconds — การ์ดเป็นสีเทา ป้ายเป็น "ข้อมูลเก่า" และขึ้นแถบเตือน
      กันคนเข้าใจผิดว่าตัวเลขค้างเป็นค่าปัจจุบัน */
   function applyStale(stale) {
     document.querySelectorAll('.stat-card').forEach(function (card) {
-      var valueEl = card.querySelector('[data-role="value"]');
-      var hasValue = valueEl && valueEl.textContent.trim() !== '--';
+      var hasValue = card.dataset.hasValue === 'true';
       var isStale = stale && hasValue;
       card.classList.toggle('stat-card--stale', isStale);
-      var status = isStale ? 'unknown' : (card.dataset.status || 'unknown');
+      var status = isStale || !hasValue ? 'unknown' : (card.dataset.status || 'unknown');
       var marker = card.querySelector('[data-role="marker"]');
-      if (marker) marker.className = 'gauge__marker gauge__marker--' + status;
+      if (marker) {
+        marker.className = 'gauge__marker gauge__marker--' + status;
+        marker.hidden = stale || !hasValue;
+      }
       var badge = card.querySelector('[data-role="status"]');
       if (!badge) return;
       badge.className = 'status-badge status-badge--' + status;
-      badge.textContent = isStale ? STATUS_LABEL.stale : (STATUS_LABEL[status] || STATUS_LABEL.unknown);
+      badge.textContent = Labels.metricStatus(card.dataset.metric, status, stale, hasValue);
     });
 
   }
@@ -100,6 +107,7 @@
     var now = serverNow();
     var sum = Labels.summary({
       hasData: !!latestReading,
+      connected: streamConnected,
       stale: !online,
       staleSeconds: lastReadingAt ? Math.max(0, Math.round((now - new Date(lastReadingAt).getTime()) / 1000)) : 0,
       values: latestReading || {},
@@ -124,6 +132,7 @@
 
     /* badge — applyStale() เป็นคนวาดจาก data-status (ให้ "ข้อมูลเก่า" ทับได้) */
     card.dataset.status = status;
+    card.dataset.hasValue = value !== null && value !== undefined && !isNaN(value) ? 'true' : 'false';
 
     /* hero value — ตั้งค่าตรงๆ ไม่ทำ animation นับเลข (มือถือสเปคต่ำกระตุก) */
     var valueEl = card.querySelector('[data-role="value"]');
@@ -263,7 +272,7 @@
         labels: labels,
         datasets: [
           {
-            label: 'CO₂ (ppm)',
+            label: 'คาร์บอนไดออกไซด์ (ppm)',
             data: series.map(function (p) { return p.co2; }),
             borderColor: cCo2,
             backgroundColor: gradCo2,
@@ -289,7 +298,7 @@
             borderWidth: 2,
           },
           {
-            label: 'ความชื้น (%)',
+            label: 'ความชื้นในอากาศ (%)',
             data: series.map(function (p) { return p.humidity; }),
             borderColor: cHumid,
             backgroundColor: gradHumid,
@@ -404,6 +413,9 @@
     var card = document.querySelector('.actuator-card[data-device="' + device + '"]');
     if (!plug || !card || !window.PlugView) return;
     var v = window.PlugView.describe(plug, serverNow(), plugStaleSeconds);
+    if (!streamConnected) {
+      v = { online: false, badge: 'unknown', text: 'ยังไม่ได้รับสถานะใหม่', meta: 'ข้อมูลล่าสุดที่ได้รับ · ' + v.meta, error: null };
+    }
 
     var dot = card.querySelector('[data-role="dot"]');
     if (dot) {
@@ -441,7 +453,7 @@
     Object.keys(plugsByDevice).forEach(renderPlugCard);
     var online = isDeviceOnline();
     setConnectionState(online);
-    applyStale(!online);
+    applyStale(!online || !streamConnected);
     renderSummary(online);
     renderLastUpdated();
     renderEsp32Card(online);
@@ -452,16 +464,16 @@
     if (!esp32Card) return;
     var dot = esp32Card.querySelector('[data-role="dot"]');
     if (dot) {
-      dot.classList.toggle('status-dot--online', online);
-      dot.classList.toggle('status-dot--offline', !online);
+      dot.classList.toggle('status-dot--online', online && streamConnected);
+      dot.classList.toggle('status-dot--offline', !online || !streamConnected);
     }
     var badge = esp32Card.querySelector('[data-role="state"]');
     if (badge) {
-      badge.className = 'status-badge status-badge--' + (online ? 'normal' : 'high');
-      badge.textContent = online ? 'ทำงานอยู่' : 'ขาดการติดต่อ';
+      badge.className = 'status-badge status-badge--' + (online && streamConnected ? 'normal' : 'unknown');
+      badge.textContent = !latestReading ? 'ยังไม่มีข้อมูล' : (online && streamConnected ? 'ส่งข้อมูลอยู่' : 'ไม่ได้รับข้อมูลใหม่');
     }
     var meta = esp32Card.querySelector('[data-role="meta"]');
-    if (meta) meta.textContent = lastReadingAt ? 'ส่งค่าล่าสุด ' + Labels.relativeTime(lastReadingAt, serverNow()) : 'ยังไม่เคยติดต่อ';
+    if (meta) meta.textContent = lastReadingAt ? 'ได้รับข้อมูลล่าสุด ' + Labels.relativeTime(lastReadingAt, serverNow()) : 'ยังไม่เคยได้รับข้อมูล';
     if (latestReading && latestReading.deviceId) esp32Card.title = latestReading.deviceId;
   }
 
@@ -486,15 +498,15 @@
     action.className = 'cell-wrap';
     [
       { label: 'พัดลม', value: d.targets.fan },
-      { label: 'เครื่องพ่น', value: d.targets.mister }
+      { label: 'เครื่องพ่นเพิ่มความชื้น', value: d.targets.mister }
     ].forEach(function (item) {
       var chip = document.createElement('span');
       chip.className = 'target target--' + item.value;
-      chip.textContent = (Labels.TARGET[item.value] || item.value) + item.label;
+      chip.textContent = Labels.target(item.value) + item.label;
       action.appendChild(chip);
       action.appendChild(document.createTextNode(' '));
     });
-    action.title = 'พัดลม: ' + Labels.target(d.targets.fan) + ', เครื่องพ่นไอน้ำ: ' + Labels.target(d.targets.mister);
+    action.title = 'พัดลม: ' + Labels.target(d.targets.fan) + ', เครื่องพ่นเพิ่มความชื้น: ' + Labels.target(d.targets.mister);
     tr.appendChild(action);
 
     var reasons = document.createElement('td');
@@ -508,7 +520,14 @@
 
   /* ── SSE ────────────────────────────────────────────────────────── */
   function connectEvents() {
+    if (eventSource) eventSource.close();
+    if (navigator.onLine === false) {
+      streamConnected = false;
+      refreshLiveness();
+      return;
+    }
     var source = new EventSource('/api/sensors/events');
+    eventSource = source;
     source.addEventListener('reading', function (event) {
       try {
         var reading = JSON.parse(event.data);
@@ -523,8 +542,31 @@
     source.addEventListener('control', function (event) {
       try { prependDecisionRow(JSON.parse(event.data)); } catch (e) { console.error('[Dashboard] SSE control parse error:', e); }
     });
-    source.onopen  = function () { setConnectionState(isDeviceOnline()); };
-    source.onerror = function () { setConnectionState(false); };
+    source.onopen = function () {
+      streamConnected = true;
+      refreshLiveness();
+      // รับค่าล่าสุดอีกครั้ง เผื่อมีข้อมูลส่งมาตอนหน้าเว็บขาดการเชื่อมต่อ
+      fetch('/api/sensors/latest', { cache: 'no-store', signal: AbortSignal.timeout(8000) })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (reading) {
+          if (reading && (!latestReading || reading.id > latestReading.id)) applyReading(reading);
+        })
+        .catch(function () { /* คงข้อมูลเดิมไว้ และรอข้อมูลจากช่องทางสด */ });
+      fetch('/api/system/plugs', { cache: 'no-store', signal: AbortSignal.timeout(8000) })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          data.plugs.forEach(function (plug) {
+            var current = plugsByDevice[plug.device];
+            if (!current || !current.reportedAt || (plug.reportedAt && plug.reportedAt >= current.reportedAt)) applyPlug(plug);
+          });
+        })
+        .catch(function () { /* คงสถานะล่าสุดที่ได้รับไว้ */ });
+    };
+    source.onerror = function () {
+      streamConnected = false;
+      refreshLiveness();
+    };
   }
 
   /* ── Init ───────────────────────────────────────────────────────── */
@@ -540,6 +582,12 @@
 
   /* Connect SSE */
   connectEvents();
+  window.addEventListener('offline', function () {
+    streamConnected = false;
+    if (eventSource) eventSource.close();
+    refreshLiveness();
+  });
+  window.addEventListener('online', connectEvents);
 
   /* จำว่าเปิด/ปิดส่วน "ข้อมูลละเอียด" ไว้ในเครื่อง (นักวิจัยเปิดค้างไว้ได้) */
   var research = document.getElementById('research-details');

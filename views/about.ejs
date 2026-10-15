@@ -25,17 +25,8 @@
   <%- include('partials/navbar') %>
 
   <%
-    var stale = !latest || !latest.online;
     var hasContact = _c.address || _c.phone || _c.line || _c.facebookUrl || _c.mapUrl;
     var hasProducts = site.products && site.products.length;
-    var card = function (key, label, unit, symbol) {
-      return {
-        metricKey: key, label: label, unit: unit, icon: symbol,
-        value: latest ? latest[key] : null,
-        status: latest ? latest.status[key] : 'unknown',
-        thresholds: thresholds, stats: stats, stale: stale
-      };
-    };
   %>
 
   <main id="main-content">
@@ -46,27 +37,14 @@
         <div class="hero__copy">
           <p class="eyebrow"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><%= site.areaFull %></p>
           <h1 class="hero__title" id="hero-heading"><%= site.name %></h1>
-          <p class="hero__lead"><%= site.tagline %> — ดูค่า CO₂ อุณหภูมิ และความชื้นของโรงเรือนสดๆ ได้ทุกเวลา</p>
+          <p class="hero__lead"><%= site.tagline %> — ดูอุณหภูมิ ความชื้นในอากาศ และคาร์บอนไดออกไซด์ของโรงเรือนได้ที่หน้าสภาพโรงเรือน</p>
           <div class="hero__actions">
-            <a class="btn btn--lg" href="/dashboard">ดูสภาพโรงเรือนสด <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn--lg" href="/">ดูสภาพโรงเรือน <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <a class="btn btn--lg btn--ghost" href="/logic">ระบบทำงานอย่างไร</a>
           </div>
-          <p class="hero__live <%= stale ? 'hero__live--off' : 'hero__live--on' %>">
-            <span class="status-dot <%= stale ? 'status-dot--offline' : 'status-dot--online' %>" aria-hidden="true"></span>
-            <% if (stale) { %>
-              <%= latest ? 'ขาดการติดต่อกับโรงเรือน — ค่าล่าสุดเมื่อ ' + labels.relativeTime(latest.createdAt, nowMs) : 'ยังไม่เคยได้รับข้อมูลจากโรงเรือน' %>
-            <% } else { %>
-              ระบบออนไลน์ · ส่งค่าล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %>
-            <% } %>
-          </p>
         </div>
         <div class="hero__art" aria-hidden="true">
           <div class="hero__disc"><img src="/img/logo-mark.svg" alt="" width="260" height="260" /></div>
-          <% if (!stale) { %>
-          <span class="hero__chip hero__chip--co2"><svg class="icon"><use href="#i-co2"/></svg><%= Math.round(latest.co2) %> ppm</span>
-          <span class="hero__chip hero__chip--temp"><svg class="icon"><use href="#i-temp"/></svg><%= latest.temperature.toFixed(1) %> °C</span>
-          <span class="hero__chip hero__chip--humid"><svg class="icon"><use href="#i-drop"/></svg><%= latest.humidity.toFixed(1) %> %</span>
-          <% } %>
         </div>
       </div>
     </section>
@@ -85,35 +63,19 @@
           <li class="feature">
             <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg></span>
             <h3 class="feature__title">วัดต่อเนื่อง</h3>
-            <p class="feature__text">เซนเซอร์วัด CO₂ อุณหภูมิ และความชื้นทุก <%= logic.readEverySeconds %> วินาที เฉลี่ยหลายค่าให้นิ่งก่อนตัดสินใจ</p>
+            <p class="feature__text">เครื่องวัดตรวจคาร์บอนไดออกไซด์ อุณหภูมิ และความชื้นทุก <%= logic.readEverySeconds %> วินาที นำหลายค่ามาเฉลี่ยก่อนสั่งงาน</p>
           </li>
           <li class="feature">
             <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-fan"/></svg></span>
             <h3 class="feature__title">ปรับสภาพอัตโนมัติ</h3>
-            <p class="feature__text">ค่าเกินเกณฑ์ ระบบเปิดพัดลมระบายอากาศ ความชื้นต่ำ ระบบพ่นไอน้ำให้เอง ทั้งวันทั้งคืน</p>
+            <p class="feature__text">ระบบสั่งเปิด–ปิดพัดลมและเครื่องพ่นเพิ่มความชื้นตามค่าที่วัดได้ โดยมีระยะเวลารอก่อนเปิด–ปิดแต่ละครั้ง</p>
           </li>
           <li class="feature">
             <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
             <h3 class="feature__title">โปร่งใส ตรวจสอบได้</h3>
-            <p class="feature__text">ดูค่าสด กราฟย้อนหลัง 24 ชั่วโมง และเหตุผลที่ระบบเปิด/ปิดอุปกรณ์ได้ทุกครั้ง</p>
+            <p class="feature__text">ดูค่าที่วัดได้ กราฟย้อนหลัง 24 ชั่วโมง และบันทึกการสั่งเปิด–ปิดอุปกรณ์ล่าสุด</p>
           </li>
         </ul>
-      </section>
-
-      <!-- ── สภาพโรงเรือนตอนนี้ ── -->
-      <section class="section" aria-labelledby="now-heading">
-        <div class="section__head section__head--row">
-          <div>
-            <p class="eyebrow eyebrow--plain">ตอนนี้</p>
-            <h2 class="section__title" id="now-heading">สภาพโรงเรือนล่าสุด</h2>
-          </div>
-          <a class="link-arrow" href="/dashboard">ดูกราฟและอุปกรณ์ <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        </div>
-        <div class="stats-grid">
-          <%- include('partials/stat-card', card('co2', 'CO₂', 'ppm', 'i-co2')) %>
-          <%- include('partials/stat-card', card('temperature', 'อุณหภูมิ', '°C', 'i-temp')) %>
-          <%- include('partials/stat-card', card('humidity', 'ความชื้น', '%', 'i-drop')) %>
-        </div>
       </section>
 
       <% if (hasProducts) { %>

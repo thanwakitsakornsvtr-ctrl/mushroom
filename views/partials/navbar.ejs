@@ -3,9 +3,9 @@
   // dashboard.client.js จะ override ค่านี้แบบ live บนหน้า dashboard
   var _online = typeof navOnline !== 'undefined' ? navOnline : false;
   var _tabs = [
-    { key: 'home',      href: '/',          label: 'หน้าแรก',      icon: 'i-home' },
-    { key: 'dashboard', href: '/dashboard', label: 'แดชบอร์ด',     icon: 'i-chart' },
-    { key: 'logic',     href: '/logic',     label: 'หลักการทำงาน', icon: 'i-loop' }
+    { key: 'dashboard', href: '/',      label: 'สภาพโรงเรือน',       icon: 'i-home' },
+    { key: 'logic',     href: '/logic', label: 'การทำงานอัตโนมัติ', icon: 'i-loop' },
+    { key: 'about',     href: '/about', label: 'เกี่ยวกับฟาร์ม',     icon: 'i-pin' }
   ];
 %>
 <%- include('icons') %>
@@ -32,14 +32,14 @@
 
     <div class="site-status">
       <div class="site-status__meta">
-        <span class="site-status__meta-label">อัปเดต</span>
-        <span class="site-status__meta-value" id="nav-last-updated">
-          <% if (navLastUpdated) { %>—<% } else { %>ยังไม่มีข้อมูล<% } %>
+        <span class="site-status__meta-label">ได้รับข้อมูลล่าสุด</span>
+        <span class="site-status__meta-value" id="nav-last-updated" title="<%= navUpdatedFull %>">
+          <%= navUpdatedText %>
         </span>
       </div>
       <div class="site-status__pill" role="status" aria-live="polite">
         <span class="status-dot <%= _online ? 'status-dot--online' : 'status-dot--offline' %>" id="connection-dot" aria-hidden="true"></span>
-        <span id="connection-label"><%= _online ? 'ออนไลน์' : 'ขาดการติดต่อ' %></span>
+        <span id="connection-label"><%= navConnectionText %></span>
       </div>
     </div>
   </div>
@@ -48,5 +48,6 @@
 <%# บนหน้าที่ไม่ใช่ dashboard (ไม่มี dashboard.client.js) ให้ poll /api/sensors/latest ทุก 10 วิ
     เพื่ออัปเดตสถานะ navbar แบบ live โดยไม่ต้องโหลดหน้าใหม่ %>
 <% if (activePage !== 'dashboard') { %>
+<script src="/js/labels.js?v=<%= assetVersion %>" defer></script>
 <script src="/js/nav-status.client.js?v=<%= assetVersion %>" defer></script>
 <% } %>

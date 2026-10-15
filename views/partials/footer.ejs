@@ -14,9 +14,9 @@
 
     <nav class="site-footer__col" aria-label="ลิงก์ด่วน">
       <p class="site-footer__heading">เมนู</p>
-      <a href="/">หน้าแรก</a>
-      <a href="/dashboard">แดชบอร์ดโรงเรือน</a>
-      <a href="/logic">หลักการทำงาน</a>
+      <a href="/">สภาพโรงเรือน</a>
+      <a href="/logic">การทำงานอัตโนมัติ</a>
+      <a href="/about">เกี่ยวกับฟาร์ม</a>
     </nav>
 
     <% if (hasContact) { %>
@@ -33,8 +33,6 @@
   <div class="site-footer__bar">
     <span>© <%= new Date().getFullYear() + 543 %> <%= site.name %></span>
     <span class="site-footer__sep" aria-hidden="true">·</span>
-    <span>เซนเซอร์ ESP32 + SCD40 + SHT30/SHT40</span>
-    <span class="site-footer__sep" aria-hidden="true">·</span>
-    <span>อัปเดตแบบเรียลไทม์</span>
+    <span>ดูแลสภาพโรงเรือนอัตโนมัติ</span>
   </div>
 </footer>

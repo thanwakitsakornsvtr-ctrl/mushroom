@@ -1,16 +1,15 @@
 <%
-  // การ์ดกล่องควบคุม ESP32 — วางรวมกับการ์ดพัดลม/เครื่องพ่นไอน้ำ (อัปเดตโดย dashboard.client.js)
-  // ชื่อบอร์ด (deviceId) ไม่แสดงบนหน้า เก็บไว้ใน title ให้นักวิจัยเท่านั้น
+  // การ์ดกล่องควบคุม ESP32 — วางคู่กับการ์ดเครื่องพ่นน้ำ (อัปเดตโดย dashboard.client.js)
   var isUp = latest ? latest.online : false;
 %>
 <article class="actuator-card" id="esp32-health-item"<% if (latest) { %> title="<%= latest.deviceId %>"<% } %>>
   <div class="actuator-card__header">
     <span class="actuator-card__icon" aria-hidden="true"><svg class="icon"><use href="#i-chip"/></svg></span>
     <span class="status-dot <%= isUp ? 'status-dot--online' : 'status-dot--offline' %>" data-role="dot" aria-hidden="true"></span>
-    <p class="actuator-card__label">กล่องควบคุมโรงเรือน</p>
-    <span class="status-badge status-badge--<%= isUp ? 'normal' : 'unknown' %>" data-role="state"><%= isUp ? 'ส่งข้อมูลอยู่' : (latest ? 'ไม่ได้รับข้อมูลใหม่' : 'ยังไม่มีข้อมูล') %></span>
+    <p class="actuator-card__label">กล่องควบคุม ESP32</p>
+    <span class="status-badge status-badge--<%= isUp ? 'normal' : 'unknown' %>" data-role="state"><%= isUp ? 'ออนไลน์' : (latest ? 'ขาดการติดต่อ' : 'ไม่มีข้อมูล') %></span>
   </div>
   <p class="actuator-card__meta" data-role="meta">
-    <% if (latest) { %>ได้รับข้อมูลล่าสุด <%= labels.relativeTime(latest.createdAt, nowMs) %><% } else { %>ยังไม่เคยได้รับข้อมูล<% } %>
+    <% if (latest) { %>อัปเดต <%= labels.relativeTime(latest.createdAt, nowMs) %><% } else { %>ยังไม่เคยได้รับข้อมูล<% } %>
   </p>
 </article>

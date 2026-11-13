@@ -9,22 +9,21 @@ const normal = {
   values: { co2: 800, temperature: 27, humidity: 85 },
   status: { co2: 'normal', temperature: 'normal', humidity: 'normal' },
   co2DangerAt: 1500,
-  fan: { known: true, on: false },
   mister: { known: true, on: false },
 };
 
 test('missing data is distinct from an old measurement', () => {
-  assert.equal(labels.metricStatus('temperature', 'unknown', true, false), 'ยังไม่มีข้อมูล');
-  assert.equal(labels.metricStatus('temperature', 'normal', true, true), 'ยังไม่ได้รับค่าใหม่');
-  assert.equal(labels.metricStatus('temperature', 'high', false, true), 'ร้อนกว่าที่กำหนด');
+  assert.equal(labels.metricStatus('temperature', 'unknown', true, false), 'ไม่มีข้อมูล');
+  assert.equal(labels.metricStatus('temperature', 'normal', true, true), 'ข้อมูลเก่า');
+  assert.equal(labels.metricStatus('temperature', 'high', false, true), 'ร้อนเกิน');
   assert.equal(labels.metricStatus('humidity', 'low', false, true), 'อากาศแห้ง');
 });
 
 test('normal readings with an unknown plug still request attention', () => {
-  const result = labels.summary({ ...normal, fan: { known: false } });
+  const result = labels.summary({ ...normal, mister: { known: false } });
   assert.equal(result.tone, 'warn');
-  assert.match(result.text, /ยังไม่ทราบสถานะปลั๊กพัดลม/);
-  assert.doesNotMatch(result.text, /ไม่ต้องทำอะไร|กำลังเปิด/);
+  assert.match(result.text, /ไม่ทราบสถานะปลั๊กเครื่องพ่นน้ำ/);
+  assert.doesNotMatch(result.text, /ปลั๊กพัดลม|ไม่ต้องทำอะไร|กำลังเปิด/);
 });
 
 test('warnings describe reported plug state without promising a future action', () => {
@@ -34,19 +33,19 @@ test('warnings describe reported plug state without promising a future action', 
     status: { ...normal.status, co2: 'high' },
   });
   assert.equal(result.tone, 'alert');
-  assert.match(result.title, /ระดับแจ้งเตือนของระบบ/);
-  assert.match(result.text, /ปลั๊กพัดลมปิดอยู่/);
+  assert.match(result.title, /ระดับแจ้งเตือน/);
+  assert.match(result.text, /ปลั๊กเครื่องพ่นน้ำปิดอยู่/);
   assert.match(result.text, /ตรวจการระบายอากาศ/);
-  assert.doesNotMatch(result.text, /ระบบจะเปิด|กำลังเปิด|งดพ่น/);
+  assert.doesNotMatch(result.text, /ปลั๊กพัดลม|ระบบจะเปิด|กำลังเปิด|งดพ่น/);
 });
 
 test('browser connection failure never claims that the greenhouse device is offline', () => {
   for (const hasData of [true, false]) {
     const result = labels.summary({ ...normal, connected: false, hasData, stale: true });
     assert.equal(result.tone, 'warn');
-    assert.match(result.title, /หน้าเว็บรับข้อมูลใหม่ไม่ได้/);
+    assert.match(result.title, /หน้าเว็บขาดการเชื่อมต่อ/);
     assert.doesNotMatch(result.text, /ตรวจไฟ|กล่องควบคุม|ขาดการติดต่อ/);
-    assert.equal(labels.connection({ connected: false, hasData, online: true }), 'หน้าเว็บรับข้อมูลใหม่ไม่ได้');
+    assert.equal(labels.connection({ connected: false, hasData, online: true }), 'หน้าเว็บขาดการเชื่อมต่อ');
   }
 });
 

@@ -39,25 +39,25 @@ test('reading validation rejects out-of-range, missing and nonnumeric measuremen
 });
 
 test('decision validation preserves defaults and rejects unsupported targets and outcomes', () => {
-  const input = { situation: ' normal ', targets: { fan: 'off', mister: 'off' }, changed: {} };
+  const input = { situation: ' normal ', targets: { mister: 'off' }, changed: {} };
   const result = decisionSchema.parse(input);
   assert.equal(result.situation, 'normal');
   assert.deepEqual(result.reasons, []);
   assert.deepEqual(result.changed, { fan: false, mister: false });
   for (const invalid of [
-    { situation: '' }, { targets: { fan: 'unknown', mister: 'off' } },
-    { reasons: Array(9).fill('x') }, { changed: { fan: 'true' } },
-    { outcomes: { fan: { applied: 'yes' } } },
+    { situation: '' }, { targets: { mister: 'unknown' } },
+    { reasons: Array(9).fill('x') }, { changed: { mister: 'true' } },
+    { outcomes: { mister: { applied: 'yes' } } },
   ]) {
     assert.equal(decisionSchema.safeParse({ ...input, ...invalid }).success, false);
   }
 });
 
-test('plug reports require both devices, valid states and boolean reachability', () => {
-  const input = { fan: { state: 'on', reachable: true }, mister: { state: 'unknown', reachable: false, error: 'timeout' } };
+test('plug reports require mister device, valid states and boolean reachability', () => {
+  const input = { mister: { state: 'unknown', reachable: false, error: 'timeout' } };
   assert.equal(plugsSchema.safeParse(input).success, true);
-  assert.equal(plugsSchema.safeParse({ fan: input.fan }).success, false);
-  assert.equal(plugsSchema.safeParse({ ...input, fan: { state: 'broken', reachable: true } }).success, false);
-  assert.equal(plugsSchema.safeParse({ ...input, fan: { state: 'on', reachable: 1 } }).success, false);
-  assert.equal(plugsSchema.safeParse({ ...input, fan: { state: 'off', reachable: false, error: 'x'.repeat(65) } }).success, false);
+  assert.equal(plugsSchema.safeParse({ fan: { state: 'on', reachable: true } }).success, false);
+  assert.equal(plugsSchema.safeParse({ mister: { state: 'broken', reachable: true } }).success, false);
+  assert.equal(plugsSchema.safeParse({ mister: { state: 'on', reachable: 1 } }).success, false);
+  assert.equal(plugsSchema.safeParse({ mister: { state: 'off', reachable: false, error: 'x'.repeat(65) } }).success, false);
 });

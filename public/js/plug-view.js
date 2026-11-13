@@ -7,7 +7,7 @@
 })(typeof self !== 'undefined' ? self : this, function (Labels) {
   'use strict';
 
-  var LABEL = { fan: 'พัดลม', mister: 'เครื่องพ่นเพิ่มความชื้น' };
+  var LABEL = { mister: 'เครื่องพ่นน้ำ' };
   var STATE_TEXT = { on: 'เปิด', off: 'ปิด' };
 
   function ageOf(plug, nowMs) {
@@ -18,10 +18,10 @@
   // nowMs: เวลาปัจจุบันฝั่ง server (ms) — ฝั่ง browser ชดเชย clock skew มาแล้ว
   function describe(plug, nowMs, staleSeconds) {
     var lastKnown = STATE_TEXT[plug.state];
-    var lastKnownText = lastKnown ? 'ล่าสุดที่ทราบ: ' + lastKnown + ' (' + Labels.shortTime(plug.changedAt, nowMs) + ')' : '';
+    var lastKnownText = lastKnown ? 'ล่าสุด: ' + lastKnown + ' (' + Labels.shortTime(plug.changedAt, nowMs) + ')' : '';
 
     if (!plug.reportedAt) {
-      return { online: false, badge: 'unknown', text: 'ไม่ทราบสถานะ', meta: 'ยังไม่ได้รับสถานะปลั๊กจากกล่องควบคุม', error: null };
+      return { online: false, badge: 'unknown', text: 'ไม่ทราบสถานะ', meta: 'ยังไม่ได้รับรายงานจากกล่องควบคุม', error: null };
     }
 
     var ageSeconds = ageOf(plug, nowMs);
@@ -30,7 +30,7 @@
         online: false,
         badge: 'unknown',
         text: 'ไม่ทราบสถานะ',
-        meta: 'ไม่ได้รับสถานะปลั๊กใหม่มา ' + Labels.duration(ageSeconds) + (lastKnownText ? ' · ' + lastKnownText : ''),
+        meta: 'ขาดรายงาน ' + Labels.duration(ageSeconds) + (lastKnownText ? ' · ' + lastKnownText : ''),
         error: null,
       };
     }
@@ -39,9 +39,9 @@
       return {
         online: false,
         badge: 'high',
-        text: 'ติดต่อปลั๊กไม่ได้',
+        text: 'ติดต่อไม่ได้',
         meta: 'ตรวจล่าสุด ' + Labels.relativeTime(plug.reportedAt, nowMs) + (lastKnownText ? ' · ' + lastKnownText : ''),
-        error: 'ควรตรวจไฟและการเชื่อมต่อของปลั๊กที่โรงเรือน',
+        error: 'ตรวจไฟและ Wi-Fi ของปลั๊ก',
       };
     }
 
@@ -53,7 +53,7 @@
       online: true,
       badge: plug.state === 'on' ? 'normal' : 'unknown',
       text: plug.state === 'on' ? 'ปลั๊กเปิดอยู่' : 'ปลั๊กปิดอยู่',
-      meta: 'ปลั๊ก' + lastKnown + 'ตั้งแต่ ' + Labels.shortTime(plug.changedAt, nowMs) + ' · ได้รับสถานะล่าสุด ' + Labels.relativeTime(plug.reportedAt, nowMs),
+      meta: lastKnown + 'ตั้งแต่ ' + Labels.shortTime(plug.changedAt, nowMs) + ' · อัปเดต ' + Labels.relativeTime(plug.reportedAt, nowMs),
       error: null,
     };
   }

@@ -9,10 +9,10 @@ const scheduler = require('../src/scheduler');
 
 const reading = { deviceId: 'greenhouse-01', co2: 800, temperature: 27.5, humidity: 85 };
 const decision = {
-  mode: 'live', situation: 'hot', reasons: ['temperature_high'],
-  targets: { fan: 'on', mister: 'off' },
-  smoothed: { co2: 800, temperature: 32, humidity: 85 },
-  classification: { co2: 'normal', temperature: 'high', humidity: 'normal' },
+  mode: 'live', situation: 'MISTING', reasons: ['humidity_low'],
+  targets: { mister: 'on' },
+  smoothed: { co2: 800, temperature: 27, humidity: 78 },
+  classification: { co2: 'normal', temperature: 'normal', humidity: 'low' },
 };
 
 test.beforeEach(() => {
@@ -109,22 +109,22 @@ test('reading broadcasts are throttled while every reading remains stored', (t) 
 });
 
 test('unknown plugs have a complete fallback and unchanged states retain changedAt', (t) => {
-  assert.deepEqual(system.getPlugs(), ['fan', 'mister'].map((device) => ({
+  assert.deepEqual(system.getPlugs(), ['mister'].map((device) => ({
     device, state: 'unknown', reachable: false, error: null, reportedAt: null, changedAt: null,
   })));
   const past = '2020-01-01T00:00:00.000Z';
-  system.recordPlugStatus('fan', { state: 'off', reachable: true });
-  db.prepare('UPDATE plug_status SET reported_at = ?, changed_at = ? WHERE device = ?').run(past, past, 'fan');
+  system.recordPlugStatus('mister', { state: 'off', reachable: true });
+  db.prepare('UPDATE plug_status SET reported_at = ?, changed_at = ? WHERE device = ?').run(past, past, 'mister');
   const messages = [];
   const client = { write: (message) => messages.push(message) };
   sseHub.addClient(client);
   t.after(() => sseHub.removeClient(client));
-  const same = system.recordPlugStatus('fan', { state: 'off', reachable: false, error: 'timeout' });
+  const same = system.recordPlugStatus('mister', { state: 'off', reachable: false, error: 'timeout' });
   assert.equal(same.changedAt, past);
   assert.notEqual(same.reportedAt, past);
   assert.equal(same.reachable, false);
   assert.equal(same.error, 'timeout');
-  const changed = system.recordPlugStatus('fan', { state: 'on', reachable: true });
+  const changed = system.recordPlugStatus('mister', { state: 'on', reachable: true });
   assert.equal(changed.changedAt, changed.reportedAt);
   assert.equal(changed.error, null);
   assert.deepEqual(system.getPlugs()[0], changed);
@@ -141,10 +141,9 @@ test('decisions and actuator outcomes preserve JSON, booleans, latest state and 
   for (const key of ['mode', 'situation', 'reasons', 'smoothed', 'classification']) {
     assert.deepEqual(saved[key], decision[key]);
   }
-  assert.equal(saved.fanTarget, 'on');
-  assert.equal(saved.misterTarget, 'off');
-  system.recordActuatorEvent({ device: 'fan', state: 'on', online: true, lastCmdId: 'cmd-1' });
-  system.recordActuatorEvent({ device: 'fan', state: 'off', online: false, lastError: { code: 'apply_failed', message: 'timeout' } });
+  assert.equal(saved.misterTarget, 'on');
+  system.recordActuatorEvent({ device: 'mister', state: 'on', online: true, lastCmdId: 'cmd-1' });
+  system.recordActuatorEvent({ device: 'mister', state: 'off', online: false, lastError: { code: 'apply_failed', message: 'timeout' } });
   const latest = system.getActuators();
   assert.equal(latest.length, 1);
   assert.equal(latest[0].state, 'off');
@@ -157,15 +156,15 @@ test('decisions and actuator outcomes preserve JSON, booleans, latest state and 
 test('retention removes expired history from all modules and preserves current plug state', () => {
   sensors.recordReading(reading);
   system.recordDecision(decision);
-  system.recordActuatorEvent({ device: 'fan', state: 'on', online: true });
-  system.recordPlugStatus('fan', { state: 'on', reachable: true });
+  system.recordActuatorEvent({ device: 'mister', state: 'on', online: true });
+  system.recordPlugStatus('mister', { state: 'on', reachable: true });
   const expired = new Date(Date.now() - 31 * 86400000).toISOString();
   for (const table of ['readings', 'control_decisions', 'actuator_events']) {
     db.prepare(`UPDATE ${table} SET created_at = ?`).run(expired);
   }
   const current = sensors.recordReading(reading);
   system.recordDecision({ ...decision, situation: 'normal' });
-  system.recordActuatorEvent({ device: 'fan', state: 'off', online: true });
+  system.recordActuatorEvent({ device: 'mister', state: 'off', online: true });
   scheduler.pruneOldData();
   assert.deepEqual(sensors.getRecent(10).map((r) => r.id), [current.id]);
   assert.equal(system.getRecentDecisions(168).length, 1);

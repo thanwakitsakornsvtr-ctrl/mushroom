@@ -11,7 +11,7 @@ function recordActuatorEvent(payload) {
   sseHub.broadcast('actuator', payload);
 }
 
-const PLUG_DEVICES = ['fan', 'mister'];
+const PLUG_DEVICES = ['mister'];
 
 // changedAt = เวลาที่สถานะ (on/off/unknown) เปลี่ยนล่าสุด, reportedAt = เวลาที่ ESP32 รายงานล่าสุด
 function recordPlugStatus(device, { state, reachable, error }) {

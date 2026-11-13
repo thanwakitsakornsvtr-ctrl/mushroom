@@ -4,10 +4,10 @@ const controller = require('./controller');
 const router = Router();
 
 router.get('/', controller.renderDashboard);
-router.get('/about', controller.renderAbout);
+// ระบบรวมเหลือหน้าเดียว — redirect เส้นทางเดิมทั้งหมดกลับมาที่ /
+router.get('/about', (req, res) => res.redirect(301, '/'));
 router.get('/dashboard', (req, res) => res.redirect(301, '/'));
-router.get('/logic', controller.renderLogic);
-// ลิงก์เก่า — ย้ายถาวรไป /logic
-router.get('/how-it-works', (req, res) => res.redirect(301, '/logic'));
+router.get('/logic', (req, res) => res.redirect(301, '/'));
+router.get('/how-it-works', (req, res) => res.redirect(301, '/'));
 
 module.exports = router;

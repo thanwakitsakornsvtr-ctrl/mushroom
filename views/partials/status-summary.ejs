@@ -10,7 +10,6 @@
     values: latest || {},
     status: latest ? latest.status : {},
     co2DangerAt: co2DangerAt,
-    fan: plugView.brief(_byDevice.fan, nowMs, plugStaleSeconds),
     mister: plugView.brief(_byDevice.mister, nowMs, plugStaleSeconds)
   });
 %>

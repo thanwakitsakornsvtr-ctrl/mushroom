@@ -7,8 +7,8 @@ const db = require('../src/shared/db');
 let base;
 const reading = { deviceId: 'greenhouse-01', co2: 800, temperature: 27.5, humidity: 85 };
 const decision = {
-  situation: 'hot', reasons: ['temperature_high'], targets: { fan: 'on', mister: 'off' },
-  changed: { fan: true, mister: false }, outcomes: { fan: { applied: true } },
+  situation: 'MISTING', reasons: ['humidity_low'], targets: { mister: 'on' },
+  changed: { mister: true }, outcomes: { mister: { applied: true } },
 };
 
 test.before(async () => {
@@ -35,7 +35,7 @@ test('empty APIs retain their existing response shapes', async () => {
   assert.deepEqual((await request('/api/system/decisions')).body, { hours: 24, decisions: [] });
   assert.deepEqual((await request('/api/system/actuators')).body, { actuators: [] });
   const { body } = await request('/api/system/plugs');
-  assert.deepEqual(body.plugs.map((p) => p.state), ['unknown', 'unknown']);
+  assert.deepEqual(body.plugs.map((p) => p.state), ['unknown']);
 });
 
 test('all device write endpoints reject missing, wrong and multibyte API keys', async () => {
@@ -87,19 +87,19 @@ test('decision reports persist targets and only record changed actuator outcomes
   assert.deepEqual(await request('/api/system/decisions', decision), { status: 202, body: { status: 'recorded' } });
   const saved = (await request('/api/system/decisions')).body.decisions[0];
   assert.equal(saved.mode, 'live');
-  assert.equal(saved.situation, 'hot');
-  assert.deepEqual(saved.reasons, ['temperature_high']);
-  assert.equal(saved.fanTarget, 'on');
+  assert.equal(saved.situation, 'MISTING');
+  assert.deepEqual(saved.reasons, ['humidity_low']);
+  assert.equal(saved.misterTarget, 'on');
   assert.equal(saved.smoothed, null);
   const actuators = (await request('/api/system/actuators')).body.actuators;
   assert.equal(actuators.length, 1);
-  assert.equal(actuators[0].device, 'fan');
+  assert.equal(actuators[0].device, 'mister');
   assert.equal(actuators[0].online, true);
   assert.equal(actuators[0].errorCode, null);
 });
 
 test('missing actuator outcomes preserve the apply_failed fallback', async () => {
-  const input = { ...decision, changed: { fan: false, mister: true }, outcomes: {} };
+  const input = { ...decision, changed: { mister: true }, outcomes: {} };
   assert.equal((await request('/api/system/decisions', input)).status, 202);
   const [actuator] = (await request('/api/system/actuators')).body.actuators;
   assert.equal(actuator.device, 'mister');
@@ -108,16 +108,19 @@ test('missing actuator outcomes preserve the apply_failed fallback', async () =>
   assert.equal(actuator.errorMessage, 'missing_outcome');
 });
 
-test('plug reports persist both device states and appear on the dashboard', async () => {
-  const payload = { fan: { state: 'on', reachable: true }, mister: { state: 'off', reachable: false, error: 'timeout' } };
+test('plug reports persist mister device state and appear on the dashboard', async () => {
+  const payload = { mister: { state: 'on', reachable: true } };
   const result = await request('/api/system/plugs', payload);
   assert.equal(result.status, 202);
+  assert.equal(result.body.plugs.length, 1);
+  assert.equal(result.body.plugs[0].device, 'mister');
   assert.equal(result.body.plugs[0].state, 'on');
-  assert.equal(result.body.plugs[1].error, 'timeout');
   assert.deepEqual((await request('/api/system/plugs')).body, result.body);
   const page = await fetch(base + '/');
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /ปลั๊กเปิดอยู่/);
+  const html = await page.text();
+  assert.match(html, /ปลั๊กเปิดอยู่/);
+  assert.doesNotMatch(html, /id="plug-fan"/);
 });
 
 test('SSE streams uncompressed plug updates using the existing event names and payload', { timeout: 5000 }, async (t) => {
@@ -130,7 +133,7 @@ test('SSE streams uncompressed plug updates using the existing event names and p
   assert.equal(response.headers.get('x-accel-buffering'), 'no');
   const reader = response.body.getReader();
   const report = await request('/api/system/plugs', {
-    fan: { state: 'on', reachable: true }, mister: { state: 'off', reachable: true },
+    mister: { state: 'off', reachable: false, error: 'timeout' },
   });
   let data = '';
   while (!data.includes('\n\n')) {

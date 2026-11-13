@@ -11,21 +11,21 @@
 
       <header class="page-head">
         <h1 class="page-head__title">สภาพโรงเรือน</h1>
-        <p class="page-head__lead">ได้รับข้อมูลล่าสุด <time id="reading-last-updated"<% if (latest) { %> datetime="<%= latest.createdAt %>" title="<%= labels.fullTime(latest.createdAt) %>"<% } %>><%= latest ? labels.relativeTime(latest.createdAt, nowMs) : 'ยังไม่มีข้อมูล' %></time></p>
+        <p class="page-head__lead">อัปเดตล่าสุด <time id="reading-last-updated"<% if (latest) { %> datetime="<%= latest.createdAt %>" title="<%= labels.fullTime(latest.createdAt) %>"<% } %>><%= latest ? labels.relativeTime(latest.createdAt, nowMs) : 'ยังไม่มีข้อมูล' %></time></p>
       </header>
 
       <%
         var stale = !latest || !latest.online;
         var staleSeconds = latest ? Math.max(0, Math.round((nowMs - new Date(latest.createdAt).getTime()) / 1000)) : 0;
       %>
-      <!-- ── สรุปสถานะ: ตอนนี้โอเคไหม + ระบบทำอะไรอยู่ (รวมเตือนขาดการติดต่อด้วย) ── -->
+      <!-- ── สรุปสถานะ ── -->
       <%- include('partials/status-summary', { stale: stale, staleSeconds: staleSeconds }) %>
 
       <!-- ── ค่าเซนเซอร์ล่าสุด 3 ค่า + ต่ำสุด/สูงสุด 24 ชม. ── -->
       <section class="stats-grid" aria-label="ค่าที่วัดได้ล่าสุด">
         <%- include('partials/stat-card', {
           metricKey: 'co2',
-          label: 'คาร์บอนไดออกไซด์ (CO₂)',
+          label: 'CO₂',
           value: latest ? latest.co2 : null,
           unit: 'ppm',
           status: latest ? latest.status.co2 : 'unknown',
@@ -47,7 +47,7 @@
         }) %>
         <%- include('partials/stat-card', {
           metricKey: 'humidity',
-          label: 'ความชื้นในอากาศ',
+          label: 'ความชื้น',
           value: latest ? latest.humidity : null,
           unit: '%',
           status: latest ? latest.status.humidity : 'unknown',
@@ -58,12 +58,12 @@
         }) %>
       </section>
 
-      <!-- ── อุปกรณ์ในโรงเรือน: พัดลม · เครื่องพ่นไอน้ำ · กล่อง ESP32 ── -->
+      <!-- ── อุปกรณ์และการทำงานอัตโนมัติ (หน้าเดียวเข้าใจครบ) ── -->
       <section class="panel" aria-labelledby="actuator-heading">
         <div class="panel__header">
           <div>
-            <h2 class="panel__title" id="actuator-heading">สถานะอุปกรณ์</h2>
-            <p class="panel__subtitle">กล่องควบคุมสั่งเปิด–ปิดอุปกรณ์อัตโนมัติ หน้านี้ใช้ดูข้อมูล สถานะเปิด–ปิดรายงานจากปลั๊ก ควรตรวจการทำงานของเครื่องที่โรงเรือนเมื่อพบปัญหา</p>
+            <h2 class="panel__title" id="actuator-heading">อุปกรณ์และการทำงานอัตโนมัติ</h2>
+            <p class="panel__subtitle">กล่องควบคุมสั่งงานปลั๊กเครื่องพ่นน้ำเองอัตโนมัติตามความชื้น</p>
           </div>
         </div>
         <div class="actuator-grid" id="actuator-grid">
@@ -72,19 +72,37 @@
           <% }); %>
           <%- include('partials/health-matrix', { latest: latest }) %>
         </div>
+        <dl class="rules-strip" aria-label="เกณฑ์การทำงานอัตโนมัติ">
+          <div class="rules-strip__item">
+            <dt>คุมเครื่องพ่นน้ำ</dt>
+            <dd>เปิดเมื่อความชื้น <strong>&lt; <%= logic.mister.onHumidityBelow %>%</strong> · ปิดเมื่อ <strong>&ge; <%= logic.mister.offHumidityAtOrAbove %>%</strong></dd>
+          </div>
+          <div class="rules-strip__item">
+            <dt>เวลาขั้นต่ำ</dt>
+            <dd>เปิดอย่างน้อย <strong><%= logic.mister.minOnMinutes %> นาที</strong> · ปิดอย่างน้อย <strong><%= logic.mister.minOffMinutes %> นาที</strong></dd>
+          </div>
+          <div class="rules-strip__item">
+            <dt>รอบวัด &amp; นิรภัย</dt>
+            <dd>วัดทุก <strong><%= logic.readEverySeconds %> วิ</strong> (เฉลี่ย <%= logic.smoothingReadings %> ค่า) · ขาดค่า <%= logic.sensorFailMinutes %> นาทีปิดปั๊ม</dd>
+          </div>
+          <div class="rules-strip__item">
+            <dt>CO₂ และอุณหภูมิ</dt>
+            <dd>วัดและแจ้งเตือนเท่านั้น (CO₂ เตือนเมื่อ <strong>&ge; <%= logic.co2DangerAtOrAbove %> ppm</strong>)</dd>
+          </div>
+        </dl>
       </section>
 
       <!-- ── Chart Panel ── -->
       <section class="panel" aria-labelledby="chart-heading">
         <div class="panel__header">
           <div>
-            <h2 class="panel__title" id="chart-heading">สภาพโรงเรือนย้อนหลัง 24 ชั่วโมง</h2>
-            <p class="panel__subtitle">แต่ละจุดแสดงค่าเฉลี่ยในช่วง <%= Math.round(chartBucketSeconds / 60) %> นาที กราฟเปลี่ยนเมื่อได้รับค่าใหม่</p>
+            <h2 class="panel__title" id="chart-heading">ย้อนหลัง 24 ชั่วโมง</h2>
+            <p class="panel__subtitle">เฉลี่ยทุก <%= Math.round(chartBucketSeconds / 60) %> นาที</p>
           </div>
           <div class="legend" role="list" aria-label="คำอธิบายเส้นกราฟ">
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--co2" aria-hidden="true"></span>
-              <span>คาร์บอนไดออกไซด์ (CO₂)</span>
+              <span>CO₂</span>
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--temperature" aria-hidden="true"></span>
@@ -92,7 +110,7 @@
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--humidity" aria-hidden="true"></span>
-              <span>ความชื้นในอากาศ</span>
+              <span>ความชื้น</span>
             </div>
           </div>
         </div>
@@ -106,26 +124,26 @@
         </div>
       </section>
 
-      <!-- ── ข้อมูลละเอียดสำหรับนักวิจัย (พับไว้ จำสถานะเปิด/ปิดในเครื่อง) ── -->
+      <!-- ── ประวัติล่าสุด (พับได้) ── -->
       <details class="panel research" id="research-details">
         <summary class="research__summary">
           <span>
-            <span class="panel__title">ประวัติการวัดและการสั่งงาน</span>
-            <span class="panel__subtitle">ดูค่าที่วัดและคำสั่งเปิด–ปิดอุปกรณ์ <%= tableRows %> รายการล่าสุด</span>
+            <span class="panel__title">ประวัติล่าสุด</span>
+            <span class="panel__subtitle">ค่าที่วัดและคำสั่ง <%= tableRows %> รายการล่าสุด</span>
           </span>
           <svg class="icon research__chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
         </summary>
 
         <div class="research__body">
-          <h3 class="research__heading" id="table-heading">ค่าที่วัดได้ล่าสุด</h3>
+          <h3 class="research__heading" id="table-heading">ค่าที่วัดได้</h3>
         <div class="table-wrap">
           <table class="history-table">
             <thead>
               <tr>
                 <th scope="col">เวลา</th>
-                <th scope="col">คาร์บอนไดออกไซด์ (ppm)</th>
+                <th scope="col">CO₂ (ppm)</th>
                 <th scope="col">อุณหภูมิ (°C)</th>
-                <th scope="col">ความชื้นในอากาศ (%)</th>
+                <th scope="col">ความชื้น (%)</th>
               </tr>
             </thead>
             <tbody id="history-table-body">
@@ -144,7 +162,7 @@
           </table>
         </div>
 
-          <h3 class="research__heading" id="decision-heading">ทำไมเครื่องถึงเปิด/ปิด</h3>
+          <h3 class="research__heading" id="decision-heading">คำสั่งเครื่องพ่นน้ำ</h3>
           <%- include('partials/decision-log', { decisions: decisions }) %>
         </div>
       </details>

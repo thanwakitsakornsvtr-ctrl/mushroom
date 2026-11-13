@@ -21,9 +21,8 @@
       <tr>
         <td title="<%= labels.fullTime(d.createdAt) %>"><%= labels.shortTime(d.createdAt, nowMs) %></td>
         <td class="cell-wrap" title="<%= d.situation || '' %>"><%= labels.situation(d.situation) %></td>
-        <td class="cell-wrap" title="พัดลม: <%= labels.target(d.fanTarget) %>, เครื่องพ่นเพิ่มความชื้น: <%= labels.target(d.misterTarget) %>">
-          <span class="target target--<%= d.fanTarget %>"><%= labels.target(d.fanTarget) %>พัดลม</span>
-          <span class="target target--<%= d.misterTarget %>"><%= labels.target(d.misterTarget) %>เครื่องพ่นเพิ่มความชื้น</span>
+        <td class="cell-wrap" title="เครื่องพ่นน้ำ: <%= labels.target(d.misterTarget) %>">
+          <span class="target target--<%= d.misterTarget %>"><%= labels.target(d.misterTarget) %>เครื่องพ่นน้ำ</span>
         </td>
         <td class="cell-wrap decision-reasons">
           <% if (d.reasons && d.reasons.length > 0) { %>

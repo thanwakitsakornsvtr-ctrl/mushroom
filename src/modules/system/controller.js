@@ -31,7 +31,7 @@ const postDecision = asyncHandler(async (req, res) => {
     classification: classification || null,
   });
 
-  for (const device of ['fan', 'mister']) {
+  for (const device of ['mister']) {
     if (!changed[device]) continue;
     const outcome = outcomes?.[device] || { applied: false, error: 'missing_outcome' };
     systemService.recordActuatorEvent({
@@ -56,7 +56,7 @@ const postPlugs = asyncHandler(async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid payload', details: parsed.error.flatten() });
   }
-  const plugs = ['fan', 'mister'].map((device) => systemService.recordPlugStatus(device, parsed.data[device]));
+  const plugs = ['mister'].map((device) => systemService.recordPlugStatus(device, parsed.data[device]));
   res.status(202).json({ plugs });
 });
 

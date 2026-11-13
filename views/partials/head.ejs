@@ -32,10 +32,16 @@
 <meta name="twitter:description" content="<%= _desc %>" />
 <meta name="twitter:image" content="<%= _ogImage %>" />
 
-<!-- Icons / PWA -->
-<link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="/img/apple-touch-icon.png" />
-<link rel="manifest" href="/site.webmanifest" />
+<!-- Icons / PWA (Add to Home Screen) -->
+<meta name="application-name" content="<%= site.name %>" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="<%= site.name %>" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="icon" href="/img/favicon-32.png?v=<%= assetVersion %>" sizes="32x32" type="image/png" />
+<link rel="icon" href="/img/icon-192.png?v=<%= assetVersion %>" sizes="192x192" type="image/png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png?v=<%= assetVersion %>" />
+<link rel="manifest" href="/site.webmanifest?v=<%= assetVersion %>" />
 
 <!-- Fonts: self-hosted (Noto Sans Thai + Inter) -->
 <link rel="preload" href="/vendor/fonts/noto-sans-thai/noto-sans-thai-thai-wght-normal.woff2" as="font" type="font/woff2" crossorigin />

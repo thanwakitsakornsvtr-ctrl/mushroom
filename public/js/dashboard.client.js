@@ -113,7 +113,6 @@
       values: latestReading || {},
       status: latestReading ? latestReading.status : {},
       co2DangerAt: co2DangerAt,
-      fan: window.PlugView.brief(plugsByDevice.fan, now, plugStaleSeconds),
       mister: window.PlugView.brief(plugsByDevice.mister, now, plugStaleSeconds)
     });
     var cls = 'summary summary--' + sum.tone;
@@ -314,7 +313,7 @@
       },
       options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -470,10 +469,10 @@
     var badge = esp32Card.querySelector('[data-role="state"]');
     if (badge) {
       badge.className = 'status-badge status-badge--' + (online && streamConnected ? 'normal' : 'unknown');
-      badge.textContent = !latestReading ? 'ยังไม่มีข้อมูล' : (online && streamConnected ? 'ส่งข้อมูลอยู่' : 'ไม่ได้รับข้อมูลใหม่');
+      badge.textContent = !latestReading ? 'ไม่มีข้อมูล' : (online && streamConnected ? 'ออนไลน์' : 'ขาดการติดต่อ');
     }
     var meta = esp32Card.querySelector('[data-role="meta"]');
-    if (meta) meta.textContent = lastReadingAt ? 'ได้รับข้อมูลล่าสุด ' + Labels.relativeTime(lastReadingAt, serverNow()) : 'ยังไม่เคยได้รับข้อมูล';
+    if (meta) meta.textContent = lastReadingAt ? 'อัปเดต ' + Labels.relativeTime(lastReadingAt, serverNow()) : 'ยังไม่เคยได้รับข้อมูล';
     if (latestReading && latestReading.deviceId) esp32Card.title = latestReading.deviceId;
   }
 
@@ -497,8 +496,7 @@
     var action = document.createElement('td');
     action.className = 'cell-wrap';
     [
-      { label: 'พัดลม', value: d.targets.fan },
-      { label: 'เครื่องพ่นเพิ่มความชื้น', value: d.targets.mister }
+      { label: 'เครื่องพ่นน้ำ', value: d.targets.mister }
     ].forEach(function (item) {
       var chip = document.createElement('span');
       chip.className = 'target target--' + item.value;
@@ -506,7 +504,7 @@
       action.appendChild(chip);
       action.appendChild(document.createTextNode(' '));
     });
-    action.title = 'พัดลม: ' + Labels.target(d.targets.fan) + ', เครื่องพ่นเพิ่มความชื้น: ' + Labels.target(d.targets.mister);
+    action.title = 'เครื่องพ่นน้ำ: ' + Labels.target(d.targets.mister);
     tr.appendChild(action);
 
     var reasons = document.createElement('td');

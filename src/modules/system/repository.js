@@ -74,7 +74,7 @@ function getLatestActuator(device) {
 }
 
 function getAllLatestActuators() {
-  return ['fan', 'mister'].map((d) => getLatestActuator(d)).filter(Boolean);
+  return ['mister'].map((d) => getLatestActuator(d)).filter(Boolean);
 }
 
 function getRecentActuatorEvents(sinceIso, limit = 50) {

@@ -8,18 +8,8 @@ const { controlLogic } = systemService;
 const asyncHandler = require('../../shared/utils/asyncHandler');
 const site = require('./site');
 
-// จำนวนแถวในตาราง "ประวัติล่าสุด" และ "ประวัติการตัดสินใจ" (ฝั่ง browser ใช้ค่าเดียวกันตอนเพิ่มแถวสด)
+// จำนวนแถวในตาราง "ประวัติล่าสุด" (ฝั่ง browser ใช้ค่าเดียวกันตอนเพิ่มแถวสด)
 const TABLE_ROWS = 5;
-
-const renderAbout = (req, res) => {
-  res.render('about', {
-    title: 'เกี่ยวกับฟาร์ม',
-    description: site.description,
-    canonicalPath: '/about',
-    activePage: 'about',
-    logic: controlLogic,
-  });
-};
 
 const renderDashboard = asyncHandler(async (req, res) => {
   const latest = sensorService.getLatestWithStatus();
@@ -31,7 +21,7 @@ const renderDashboard = asyncHandler(async (req, res) => {
 
   res.render('dashboard', {
     title: 'สภาพโรงเรือน',
-    description: 'ดูอุณหภูมิ ความชื้นในอากาศ คาร์บอนไดออกไซด์ และสถานะอุปกรณ์ของโรงเห็ดนางฟ้า พร้อมเวลาได้รับข้อมูลล่าสุด',
+    description: 'ติดตาม CO₂ อุณหภูมิ ความชื้น และสถานะเครื่องพ่นน้ำอัตโนมัติของโรงเห็ดนางฟ้า',
     canonicalPath: '/',
     activePage: 'dashboard',
     latest,
@@ -43,6 +33,7 @@ const renderDashboard = asyncHandler(async (req, res) => {
     plugs,
     plugView,
     labels,
+    logic: controlLogic,
     nowMs: Date.now(),
     plugStaleSeconds: config.plugStaleSeconds,
     deviceOfflineSeconds: config.deviceOfflineSeconds,
@@ -52,16 +43,4 @@ const renderDashboard = asyncHandler(async (req, res) => {
   });
 });
 
-const renderLogic = (req, res) => {
-  res.render('logic', {
-    title: 'การทำงานอัตโนมัติ',
-    description: 'ระบบดูแลโรงเรือนเห็ดนางฟ้าอย่างไร อ่านเกณฑ์และระยะเวลาที่ใช้สั่งเปิด–ปิดพัดลมและเครื่องพ่นเพิ่มความชื้น',
-    canonicalPath: '/logic',
-    activePage: 'logic',
-    logic: controlLogic,
-    thresholds,
-    plugStaleSeconds: config.plugStaleSeconds,
-  });
-};
-
-module.exports = { renderAbout, renderDashboard, renderLogic };
+module.exports = { renderDashboard };

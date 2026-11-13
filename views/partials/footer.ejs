@@ -1,38 +1,9 @@
-<%
-  var c = site.contact;
-  var hasContact = c.address || c.phone || c.line || c.facebookUrl || c.mapUrl;
-%>
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <div class="site-footer__brand">
-      <span class="site-footer__mark" aria-hidden="true"></span>
-      <div>
-        <p class="site-footer__name"><%= site.name %></p>
-        <p class="site-footer__area"><%= site.areaFull %></p>
-      </div>
+    <span class="site-footer__mark" aria-hidden="true"></span>
+    <div class="site-footer__info">
+      <p class="site-footer__name"><%= site.name %></p>
+      <p class="site-footer__area"><%= site.areaFull %> · คุมความชื้นอัตโนมัติ</p>
     </div>
-
-    <nav class="site-footer__col" aria-label="ลิงก์ด่วน">
-      <p class="site-footer__heading">เมนู</p>
-      <a href="/">สภาพโรงเรือน</a>
-      <a href="/logic">การทำงานอัตโนมัติ</a>
-      <a href="/about">เกี่ยวกับฟาร์ม</a>
-    </nav>
-
-    <% if (hasContact) { %>
-    <div class="site-footer__col">
-      <p class="site-footer__heading">ติดต่อ</p>
-      <% if (c.address) { %><p><%= c.address %></p><% } %>
-      <% if (c.phone) { %><a href="<%= c.phoneHref %>"><%= c.phone %></a><% } %>
-      <% if (c.line) { %><a href="<%= c.lineHref %>" rel="noopener" target="_blank">LINE: <%= c.line %></a><% } %>
-      <% if (c.facebookUrl) { %><a href="<%= c.facebookUrl %>" rel="noopener" target="_blank">Facebook</a><% } %>
-      <% if (c.mapUrl) { %><a href="<%= c.mapUrl %>" rel="noopener" target="_blank">ดูแผนที่</a><% } %>
-    </div>
-    <% } %>
-  </div>
-  <div class="site-footer__bar">
-    <span>© <%= new Date().getFullYear() + 543 %> <%= site.name %></span>
-    <span class="site-footer__sep" aria-hidden="true">·</span>
-    <span>ดูแลสภาพโรงเรือนอัตโนมัติ</span>
   </div>
 </footer>

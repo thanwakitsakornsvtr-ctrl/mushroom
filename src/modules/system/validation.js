@@ -9,7 +9,7 @@ const decisionSchema = z.object({
   situation: z.string().trim().min(1).max(64),
   reasons: z.array(z.string().max(64)).max(8).default([]),
   targets: z.object({
-    fan: z.enum(['on', 'off']),
+    fan: z.enum(['on', 'off']).optional(),
     mister: z.enum(['on', 'off']),
   }),
   smoothed: z
@@ -38,7 +38,7 @@ const plugReportSchema = z.object({
 // ESP32 อ่านสถานะจริงจากปลั๊ก Tapo แล้วรายงาน (ตอนบูต, ทุก 30 วิ, หลังสั่งสำเร็จ)
 const plugsSchema = z.object({
   deviceId: z.string().trim().min(1).max(64).optional(),
-  fan: plugReportSchema,
+  fan: plugReportSchema.optional(),
   mister: plugReportSchema,
 });
 

@@ -21,41 +21,95 @@
       <!-- ── สรุปสถานะ ── -->
       <%- include('partials/status-summary', { stale: stale, staleSeconds: staleSeconds }) %>
 
-      <!-- ── ค่าเซนเซอร์ล่าสุด 3 ค่า + ต่ำสุด/สูงสุด 24 ชม. ── -->
-      <section class="stats-grid" aria-label="ค่าที่วัดได้ล่าสุด">
-        <%- include('partials/stat-card', {
-          metricKey: 'co2',
-          label: 'CO₂',
-          value: latest ? latest.co2 : null,
-          unit: 'ppm',
-          status: latest ? latest.status.co2 : 'unknown',
-          thresholds: thresholds,
-          stats: stats,
-          stale: stale,
-          icon: 'i-co2'
-        }) %>
-        <%- include('partials/stat-card', {
-          metricKey: 'temperature',
-          label: 'อุณหภูมิ',
-          value: latest ? latest.temperature : null,
-          unit: '°C',
-          status: latest ? latest.status.temperature : 'unknown',
-          thresholds: thresholds,
-          stats: stats,
-          stale: stale,
-          icon: 'i-temp'
-        }) %>
-        <%- include('partials/stat-card', {
-          metricKey: 'humidity',
-          label: 'ความชื้น',
-          value: latest ? latest.humidity : null,
-          unit: '%',
-          status: latest ? latest.status.humidity : 'unknown',
-          thresholds: thresholds,
-          stats: stats,
-          stale: stale,
-          icon: 'i-drop'
-        }) %>
+      <!-- ── ค่าเซนเซอร์ล่าสุด แยกตามตัวเซนเซอร์ ── -->
+      <section class="sensor-sections" aria-label="ค่าที่วัดได้ล่าสุด">
+
+        <div class="sensor-group" aria-labelledby="sensor-sht40-heading">
+          <div class="sensor-group__head">
+            <h2 class="sensor-group__title" id="sensor-sht40-heading">
+              เซนเซอร์ควบคุม · SHT40
+              <span class="sensor-chip sensor-chip--primary">คุมเครื่องพ่นน้ำ</span>
+            </h2>
+            <p class="sensor-group__meta">I2C 0x44 · ใช้อุณหภูมิและความชื้นตัวนี้ตัดสินใจเปิด-ปิดปลั๊ก</p>
+          </div>
+          <div class="stats-grid stats-grid--two">
+            <%- include('partials/stat-card', {
+              metricKey: 'sht40Temperature',
+              thresholdKey: 'temperature',
+              label: 'อุณหภูมิ',
+              sourceTag: 'SHT40',
+              value: latest ? latest.sht40Temperature : null,
+              unit: '°C',
+              status: latest && latest.sht40Status ? latest.sht40Status.temperature : 'unknown',
+              thresholds: thresholds,
+              stats: stats,
+              stale: stale,
+              icon: 'i-temp'
+            }) %>
+            <%- include('partials/stat-card', {
+              metricKey: 'sht40Humidity',
+              thresholdKey: 'humidity',
+              label: 'ความชื้น',
+              sourceTag: 'SHT40',
+              value: latest ? latest.sht40Humidity : null,
+              unit: '%',
+              status: latest && latest.sht40Status ? latest.sht40Status.humidity : 'unknown',
+              thresholds: thresholds,
+              stats: stats,
+              stale: stale,
+              icon: 'i-drop'
+            }) %>
+          </div>
+        </div>
+
+        <div class="sensor-group" aria-labelledby="sensor-scd40-heading">
+          <div class="sensor-group__head">
+            <h2 class="sensor-group__title" id="sensor-scd40-heading">
+              เซนเซอร์วัด CO₂ · SCD40
+              <span class="sensor-chip sensor-chip--secondary">วัด CO₂ + เทียบค่า</span>
+            </h2>
+            <p class="sensor-group__meta">I2C 0x62 · วัด CO₂ แจ้งเตือน และอ่านอุณหภูมิ/ความชื้นเทียบเคียง</p>
+          </div>
+          <div class="stats-grid">
+            <%- include('partials/stat-card', {
+              metricKey: 'co2',
+              label: 'CO₂',
+              sourceTag: 'SCD40',
+              value: latest ? latest.co2 : null,
+              unit: 'ppm',
+              status: latest ? latest.status.co2 : 'unknown',
+              thresholds: thresholds,
+              stats: stats,
+              stale: stale,
+              icon: 'i-co2'
+            }) %>
+            <%- include('partials/stat-card', {
+              metricKey: 'temperature',
+              label: 'อุณหภูมิ',
+              sourceTag: 'SCD40',
+              value: latest ? latest.temperature : null,
+              unit: '°C',
+              status: latest ? latest.status.temperature : 'unknown',
+              thresholds: thresholds,
+              stats: stats,
+              stale: stale,
+              icon: 'i-temp'
+            }) %>
+            <%- include('partials/stat-card', {
+              metricKey: 'humidity',
+              label: 'ความชื้น',
+              sourceTag: 'SCD40',
+              value: latest ? latest.humidity : null,
+              unit: '%',
+              status: latest ? latest.status.humidity : 'unknown',
+              thresholds: thresholds,
+              stats: stats,
+              stale: stale,
+              icon: 'i-drop'
+            }) %>
+          </div>
+        </div>
+
       </section>
 
       <!-- ── อุปกรณ์และการทำงานอัตโนมัติ (หน้าเดียวเข้าใจครบ) ── -->
@@ -63,7 +117,7 @@
         <div class="panel__header">
           <div>
             <h2 class="panel__title" id="actuator-heading">อุปกรณ์และการทำงานอัตโนมัติ</h2>
-            <p class="panel__subtitle">กล่องควบคุมสั่งงานปลั๊กเครื่องพ่นน้ำเองอัตโนมัติตามความชื้น</p>
+            <p class="panel__subtitle">กล่องควบคุมใช้ค่าความชื้นจาก SHT40 สั่งปลั๊กเครื่องพ่นน้ำอัตโนมัติ (SCD40 วัด CO₂ แจ้งเตือนและเทียบค่า)</p>
           </div>
         </div>
         <div class="actuator-grid" id="actuator-grid">
@@ -74,7 +128,7 @@
         </div>
         <dl class="rules-strip" aria-label="เกณฑ์การทำงานอัตโนมัติ">
           <div class="rules-strip__item">
-            <dt>คุมเครื่องพ่นน้ำ</dt>
+            <dt>คุมเครื่องพ่นน้ำ (SHT40)</dt>
             <dd>เปิดเมื่อความชื้น <strong>&lt; <%= logic.mister.onHumidityBelow %>%</strong> · ปิดเมื่อ <strong>&ge; <%= logic.mister.offHumidityAtOrAbove %>%</strong></dd>
           </div>
           <div class="rules-strip__item">
@@ -102,15 +156,23 @@
           <div class="legend" role="list" aria-label="คำอธิบายเส้นกราฟ">
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--co2" aria-hidden="true"></span>
-              <span>CO₂</span>
+              <span>CO₂ (SCD40)</span>
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--temperature" aria-hidden="true"></span>
-              <span>อุณหภูมิ</span>
+              <span>อุณหภูมิ SCD40</span>
             </div>
             <div class="legend__item" role="listitem">
               <span class="legend__dot legend__dot--humidity" aria-hidden="true"></span>
-              <span>ความชื้น</span>
+              <span>ความชื้น SCD40</span>
+            </div>
+            <div class="legend__item" role="listitem">
+              <span class="legend__dot legend__dot--sht40-temp" aria-hidden="true"></span>
+              <span>อุณหภูมิ SHT40</span>
+            </div>
+            <div class="legend__item" role="listitem">
+              <span class="legend__dot legend__dot--sht40-humid" aria-hidden="true"></span>
+              <span>ความชื้น SHT40</span>
             </div>
           </div>
         </div>
@@ -141,21 +203,26 @@
             <thead>
               <tr>
                 <th scope="col">เวลา</th>
-                <th scope="col">CO₂ (ppm)</th>
-                <th scope="col">อุณหภูมิ (°C)</th>
-                <th scope="col">ความชื้น (%)</th>
+                <th scope="col">CO₂ SCD40 (ppm)</th>
+                <th scope="col">อุณหภูมิ SCD40 (°C)</th>
+                <th scope="col">ความชื้น SCD40 (%)</th>
+                <th scope="col">อุณหภูมิ SHT40 (°C)</th>
+                <th scope="col">ความชื้น SHT40 (%)</th>
               </tr>
             </thead>
             <tbody id="history-table-body">
               <% if (recent.length === 0) { %>
-                <tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>
+                <tr><td colspan="6" class="empty-row">ยังไม่มีข้อมูล</td></tr>
               <% } %>
               <% recent.forEach(function(r) { %>
+                <% var s40 = r.sht40Status || {}; %>
                 <tr>
                   <td title="<%= labels.fullTime(r.createdAt) %>"><%= labels.shortTime(r.createdAt, nowMs) %></td>
                   <td class="status-<%= r.status.co2 %>"><%= labels.value('co2', r.co2) %></td>
                   <td class="status-<%= r.status.temperature %>"><%= labels.value('temperature', r.temperature) %></td>
                   <td class="status-<%= r.status.humidity %>"><%= labels.value('humidity', r.humidity) %></td>
+                  <td class="status-<%= s40.temperature || 'unknown' %>"><%= r.sht40Temperature !== null && r.sht40Temperature !== undefined ? labels.value('sht40Temperature', r.sht40Temperature) : '—' %></td>
+                  <td class="status-<%= s40.humidity || 'unknown' %>"><%= r.sht40Humidity !== null && r.sht40Humidity !== undefined ? labels.value('sht40Humidity', r.sht40Humidity) : '—' %></td>
                 </tr>
               <% }); %>
             </tbody>

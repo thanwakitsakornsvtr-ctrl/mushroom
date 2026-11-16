@@ -50,7 +50,9 @@ test('home opens the greenhouse view and explains when there are no readings', a
   assert.match(body, /<h1[^>]*>สภาพโรงเรือน<\/h1>/);
   assert.match(body, /rel="canonical" href="https:\/\/example\.test\/"/);
   assert.match(body, /ยังไม่มีข้อมูลจากโรงเรือน/);
-  assert.equal((body.match(/data-role="status">ไม่มีข้อมูล/g) || []).length, 3);
+  assert.equal((body.match(/data-role="status">ไม่มีข้อมูล/g) || []).length, 5);
+  assert.match(body, /เซนเซอร์ควบคุม · SHT40/);
+  assert.match(body, /เซนเซอร์วัด CO₂ · SCD40/);
   assert.match(body, /src="\/js\/dashboard\.client\.js/);
   assert.doesNotMatch(body, /src="\/js\/nav-status\.client\.js/);
 });
@@ -89,13 +91,15 @@ test('home shows the latest reading immediately after it is posted', async () =>
   const post = await fetch(`${base}/api/sensors/readings`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': 'test-only-key' },
-    body: JSON.stringify({ co2: 800, temperature: 27.5, humidity: 85 }),
+    body: JSON.stringify({ co2: 800, temperature: 27.5, humidity: 85, sht40Temperature: 26.2, sht40Humidity: 87.4 }),
   });
   assert.equal(post.status, 201);
   const { body } = await get('/');
   assert.match(body, /id="connection-label">ออนไลน์</);
   assert.match(body, /data-role="value">27\.5/);
   assert.match(body, /data-role="value">800/);
+  assert.match(body, /data-role="value">26\.2/);
+  assert.match(body, /data-role="value">87\.4/);
   assert.match(body, /ไม่ทราบสถานะปลั๊กเครื่องพ่นน้ำ/);
   assert.doesNotMatch(body, /ปลั๊กพัดลม|id="plug-fan"|ไม่ต้องทำอะไร/);
   assert.match(body, /id="chart-summary"/);
@@ -109,7 +113,7 @@ test('home labels old readings without presenting them as current conditions', a
   try {
     const { body } = await get('/');
     assert.match(body, /ขาดการติดต่อจากโรงเรือน 10 นาที/);
-    assert.equal((body.match(/data-role="status">ข้อมูลเก่า/g) || []).length, 3);
+    assert.equal((body.match(/data-role="status">ข้อมูลเก่า/g) || []).length, 5);
     assert.match(body, /ค่าเก่า/);
     assert.doesNotMatch(body, /data-role="status">ปกติ/);
   } finally {

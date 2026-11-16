@@ -13,6 +13,10 @@ function withStatus(reading) {
       temperature: thresholds.classify('temperature', reading.temperature),
       humidity: thresholds.classify('humidity', reading.humidity),
     },
+    sht40Status: {
+      temperature: thresholds.classify('temperature', reading.sht40Temperature),
+      humidity: thresholds.classify('humidity', reading.sht40Humidity),
+    },
   };
 }
 

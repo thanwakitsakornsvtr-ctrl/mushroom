@@ -1,19 +1,25 @@
 const db = require('./schema');
 
 const insertStmt = db.prepare(`
-  INSERT INTO readings (device_id, co2, temperature, humidity)
-  VALUES (?, ?, ?, ?)
+  INSERT INTO readings (device_id, co2, temperature, humidity, sht40_temperature, sht40_humidity)
+  VALUES (?, ?, ?, ?, ?, ?)
 `);
 
+const SELECT_COLS = `
+  id, device_id AS deviceId, co2, temperature, humidity,
+  sht40_temperature AS sht40Temperature, sht40_humidity AS sht40Humidity,
+  created_at AS createdAt
+`;
+
 const latestStmt = db.prepare(`
-  SELECT id, device_id AS deviceId, co2, temperature, humidity, created_at AS createdAt
+  SELECT ${SELECT_COLS}
   FROM readings
   ORDER BY id DESC
   LIMIT 1
 `);
 
 const historyStmt = db.prepare(`
-  SELECT id, device_id AS deviceId, co2, temperature, humidity, created_at AS createdAt
+  SELECT ${SELECT_COLS}
   FROM readings
   WHERE created_at >= ?
   ORDER BY id ASC
@@ -24,6 +30,8 @@ const statsStmt = db.prepare(`
     MIN(co2) AS minCo2, MAX(co2) AS maxCo2, AVG(co2) AS avgCo2,
     ROUND(MIN(temperature), 1) AS minTemperature, ROUND(MAX(temperature), 1) AS maxTemperature, ROUND(AVG(temperature), 1) AS avgTemperature,
     ROUND(MIN(humidity), 1) AS minHumidity, ROUND(MAX(humidity), 1) AS maxHumidity, ROUND(AVG(humidity), 1) AS avgHumidity,
+    ROUND(MIN(sht40_temperature), 1) AS minSht40Temperature, ROUND(MAX(sht40_temperature), 1) AS maxSht40Temperature, ROUND(AVG(sht40_temperature), 1) AS avgSht40Temperature,
+    ROUND(MIN(sht40_humidity), 1) AS minSht40Humidity, ROUND(MAX(sht40_humidity), 1) AS maxSht40Humidity, ROUND(AVG(sht40_humidity), 1) AS avgSht40Humidity,
     COUNT(*) AS count
   FROM readings
   WHERE created_at >= ?
@@ -39,6 +47,8 @@ const bucketedStmt = db.prepare(`
     ROUND(AVG(co2)) AS co2,
     ROUND(AVG(temperature), 1) AS temperature,
     ROUND(AVG(humidity), 1) AS humidity,
+    ROUND(AVG(sht40_temperature), 1) AS sht40Temperature,
+    ROUND(AVG(sht40_humidity), 1) AS sht40Humidity,
     COUNT(*) AS n
   FROM readings
   WHERE created_at >= :since
@@ -47,7 +57,7 @@ const bucketedStmt = db.prepare(`
 `);
 
 const recentStmt = db.prepare(`
-  SELECT id, device_id AS deviceId, co2, temperature, humidity, created_at AS createdAt
+  SELECT ${SELECT_COLS}
   FROM readings
   ORDER BY id DESC
   LIMIT ?
@@ -55,13 +65,16 @@ const recentStmt = db.prepare(`
 
 const pruneStmt = db.prepare('DELETE FROM readings WHERE created_at < ?');
 
-function insertReading({ deviceId, co2, temperature, humidity }) {
-  const info = insertStmt.run(deviceId, co2, temperature, humidity);
+function insertReading({ deviceId, co2, temperature, humidity, sht40Temperature, sht40Humidity }) {
+  const info = insertStmt.run(
+    deviceId, co2, temperature, humidity,
+    sht40Temperature ?? null, sht40Humidity ?? null,
+  );
   return getById(Number(info.lastInsertRowid));
 }
 
 const byIdStmt = db.prepare(`
-  SELECT id, device_id AS deviceId, co2, temperature, humidity, created_at AS createdAt
+  SELECT ${SELECT_COLS}
   FROM readings WHERE id = ?
 `);
 

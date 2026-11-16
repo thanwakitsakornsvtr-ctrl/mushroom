@@ -55,6 +55,16 @@ test('incomplete sensor status cannot produce an all-clear summary', () => {
   assert.match(result.title, /ข้อมูลที่วัดได้ยังไม่ครบ/);
 });
 
+test('summary prefers SHT40 humidity/temperature status for control alerts when present', () => {
+  const result = labels.summary({
+    ...normal,
+    sht40Status: { temperature: 'normal', humidity: 'low' },
+  });
+  assert.equal(result.tone, 'warn');
+  assert.match(result.title, /อากาศแห้ง/);
+  assert.match(result.text, /ควรตรวจเครื่องพ่นน้ำ/);
+});
+
 test('plug reports identify the power outlet and keep technical errors out of instructions', () => {
   const now = Date.now();
   const plug = { state: 'on', reachable: true, reportedAt: new Date(now).toISOString(), changedAt: new Date(now).toISOString() };

@@ -34,10 +34,17 @@
     humidity: { normal: 'ปกติ', high: 'ชื้นเกิน', low: 'อากาศแห้ง' },
   };
 
+  function baseMetric(metric) {
+    if (metric === 'sht40Temperature') return 'temperature';
+    if (metric === 'sht40Humidity') return 'humidity';
+    return metric;
+  }
+
   function metricStatus(metric, status, stale, hasValue) {
     if (!hasValue) return STATUS.unknown;
     if (stale) return STATUS.stale;
-    return (METRIC_STATUS[metric] || {})[status] || STATUS[status] || STATUS.unknown;
+    var key = baseMetric(metric);
+    return (METRIC_STATUS[key] || {})[status] || STATUS[status] || STATUS.unknown;
   }
 
   function connection(o) {
@@ -53,7 +60,7 @@
 
   function value(metric, v) {
     if (v === null || v === undefined || v === '' || isNaN(v)) return '--';
-    var d = DECIMALS[metric] !== undefined ? DECIMALS[metric] : 1;
+    var d = DECIMALS[baseMetric(metric)] !== undefined ? DECIMALS[baseMetric(metric)] : 1;
     var f = Math.pow(10, d);
     return String(Math.round(Number(v) * f) / f);
   }
@@ -124,7 +131,7 @@
 
   // { zoneLeft, zoneWidth } = แถบช่วงปกติ, pos = ตำแหน่งตัวชี้ค่าปัจจุบัน (null = ไม่มีค่า) — หน่วย % ของความกว้าง
   function gauge(metric, v, th) {
-    var scale = GAUGE_SCALE[metric] || [0, 100];
+    var scale = GAUGE_SCALE[baseMetric(metric)] || [0, 100];
     var zoneLeft = th ? pct(scale, th.normalMin) : 0;
     var zoneRight = th ? pct(scale, th.normalMax) : 0;
     var hasValue = v !== null && v !== undefined && !isNaN(v);
@@ -165,6 +172,9 @@
     }
 
     var s = o.status || {};
+    var sht = o.sht40Status || {};
+    var effTemp = (sht.temperature && sht.temperature !== 'unknown') ? sht.temperature : s.temperature;
+    var effHumidity = (sht.humidity && sht.humidity !== 'unknown') ? sht.humidity : s.humidity;
     var problems = [];
     var actions = [];
     var tone = 'ok';
@@ -178,10 +188,10 @@
       needVent = true;
       if (co2Danger) tone = 'alert';
     }
-    if (s.temperature === 'high') { problems.push('ร้อนเกินไป'); needVent = true; }
-    if (s.temperature === 'low') { problems.push('เย็นเกินไป'); unhandled = true; }
-    if (s.humidity === 'low') { problems.push('อากาศแห้ง'); needMister = true; }
-    if (s.humidity === 'high') { problems.push('ชื้นเกินไป'); unhandled = true; }
+    if (effTemp === 'high') { problems.push('ร้อนเกินไป'); needVent = true; }
+    if (effTemp === 'low') { problems.push('เย็นเกินไป'); unhandled = true; }
+    if (effHumidity === 'low') { problems.push('อากาศแห้ง'); needMister = true; }
+    if (effHumidity === 'high') { problems.push('ชื้นเกินไป'); unhandled = true; }
 
     ['mister'].forEach(function (key) {
       var p = o[key] || {};
@@ -199,8 +209,8 @@
     if (needMister) actions.push('ควรตรวจเครื่องพ่นน้ำ');
     if (unhandled) actions.push('ควรตรวจสภาพโรงเรือน');
 
-    if (['co2', 'temperature', 'humidity'].some(function (key) {
-      return ['normal', 'low', 'high'].indexOf(s[key]) === -1;
+    if ([s.co2, effTemp, effHumidity].some(function (st) {
+      return ['normal', 'low', 'high'].indexOf(st) === -1;
     })) {
       problems.push('ข้อมูลที่วัดได้ยังไม่ครบ');
     }

@@ -9,6 +9,7 @@
     staleSeconds: staleSeconds,
     values: latest || {},
     status: latest ? latest.status : {},
+    sht40Status: latest ? latest.sht40Status : null,
     co2DangerAt: co2DangerAt,
     mister: plugView.brief(_byDevice.mister, nowMs, plugStaleSeconds)
   });

@@ -62,6 +62,8 @@
   --color-metric-co2:    #7B5E3A;
   --color-metric-temp:   #C05A32;
   --color-metric-humid:  #2F7A87;
+  --color-metric-sht40-temp:  #D97706;
+  --color-metric-sht40-humid: #1D5B9E;
   --color-metric-co2-rgb:   123, 94, 58;
   --color-metric-temp-rgb:  192, 90, 50;
   --color-metric-humid-rgb: 47, 122, 135;
@@ -201,12 +203,63 @@ a { color: var(--color-forest-text); }
 .status-dot--online  { background: var(--color-online);  box-shadow: 0 0 0 3px rgba(31, 157, 85, 0.22); }
 .status-dot--offline { background: var(--color-offline); box-shadow: 0 0 0 3px rgba(194, 54, 43, 0.18); }
 
-/* ── 5. STATS GRID ────────────────────────────────────────────────── */
+/* ── 5. STATS GRID & SENSOR GROUPS ────────────────────────────────── */
+.sensor-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.sensor-group__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px var(--space-2);
+  margin-bottom: 12px;
+}
+
+.sensor-group__title {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.sensor-group__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.sensor-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.sensor-chip--primary {
+  background: var(--color-normal-bg);
+  color: var(--color-normal-text);
+}
+.sensor-chip--secondary {
+  background: var(--color-low-bg);
+  color: var(--color-low-text);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+}
+
+.stats-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* ── 6. STAT CARD ────────────────────────────────────────────────── */
@@ -264,6 +317,21 @@ a { color: var(--color-forest-text); }
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text);
+}
+
+.stat-card__source {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-number);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  vertical-align: 1px;
 }
 
 .stat-card__help {
@@ -469,6 +537,8 @@ a { color: var(--color-forest-text); }
 .legend__dot--co2         { background: var(--color-metric-co2); }
 .legend__dot--temperature { background: var(--color-metric-temp); }
 .legend__dot--humidity    { background: var(--color-metric-humid); }
+.legend__dot--sht40-temp  { width: 14px; height: 0; border-top: 3px dashed var(--color-metric-sht40-temp); border-radius: 0; }
+.legend__dot--sht40-humid { width: 14px; height: 0; border-top: 3px dashed var(--color-metric-sht40-humid); border-radius: 0; }
 
 .chart-wrap {
   position: relative;
@@ -735,10 +805,10 @@ a { color: var(--color-forest-text); }
   }
   .rule-grid { grid-template-columns: 1fr; gap: var(--space-2); }
 
-  .stats-grid {
+  .stats-grid,
+  .stats-grid--two {
     grid-template-columns: 1fr;
     gap: 12px;
-    margin-bottom: var(--space-2);
   }
 
   /* การ์ดแบบแถว: [ไอคอน] ชื่อ+ค่า ............ [ป้าย]  แล้วเกจเต็มความกว้าง
@@ -785,6 +855,7 @@ a { color: var(--color-forest-text); }
 
 @media (min-width: 1024px) {
   .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stats-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ── 13. PRINT ────────────────────────────────────────────────────── */

@@ -112,6 +112,7 @@
       staleSeconds: lastReadingAt ? Math.max(0, Math.round((now - new Date(lastReadingAt).getTime()) / 1000)) : 0,
       values: latestReading || {},
       status: latestReading ? latestReading.status : {},
+      sht40Status: latestReading ? latestReading.sht40Status : null,
       co2DangerAt: co2DangerAt,
       mister: window.PlugView.brief(plugsByDevice.mister, now, plugStaleSeconds)
     });
@@ -129,37 +130,44 @@
     var card = document.querySelector('.stat-card[data-metric="' + metric + '"]');
     if (!card) return;
 
+    var hasValue = value !== null && value !== undefined && !isNaN(value);
+    var thresholdKey = card.dataset.thresholdMetric || metric;
+
     /* badge — applyStale() เป็นคนวาดจาก data-status (ให้ "ข้อมูลเก่า" ทับได้) */
-    card.dataset.status = status;
-    card.dataset.hasValue = value !== null && value !== undefined && !isNaN(value) ? 'true' : 'false';
+    card.dataset.status = status || 'unknown';
+    card.dataset.hasValue = hasValue ? 'true' : 'false';
 
     /* hero value — ตั้งค่าตรงๆ ไม่ทำ animation นับเลข (มือถือสเปคต่ำกระตุก) */
     var valueEl = card.querySelector('[data-role="value"]');
-    if (valueEl) valueEl.textContent = Labels.value(metric, value);
+    if (valueEl) valueEl.textContent = hasValue ? Labels.value(metric, value) : '—';
 
     /* ตัวชี้บนเกจ — เลื่อนด้วย CSS transition (สีวาดใน applyStale ตาม data-status) */
     var marker = card.querySelector('[data-role="marker"]');
-    var g = Labels.gauge(metric, value, thresholds[metric]);
+    var g = Labels.gauge(thresholdKey, hasValue ? value : null, thresholds[thresholdKey]);
     if (marker) {
       marker.hidden = g.pos === null;
       if (g.pos !== null) marker.style.left = g.pos + '%';
     }
 
     /* ต่ำสุด/สูงสุด 24 ชม. — ขยับตามค่าใหม่ทันที ไม่ต้องรอโหลดหน้าใหม่ */
-    if (value !== null && value !== undefined) {
+    if (hasValue) {
       var mm = minMax[metric];
-      if (mm.min === null || mm.min === undefined || value < mm.min) mm.min = value;
-      if (mm.max === null || mm.max === undefined || value > mm.max) mm.max = value;
-      renderMinMax(card, metric);
+      if (mm) {
+        if (mm.min === null || mm.min === undefined || value < mm.min) mm.min = value;
+        if (mm.max === null || mm.max === undefined || value > mm.max) mm.max = value;
+        renderMinMax(card, metric);
+      }
     }
   }
 
   /* ── Min/Max 24 ชม. (ค่าตั้งต้นจาก SSR แล้วขยายตามค่าสด) ─────────── */
   var st = initialData.stats || {};
   var minMax = {
-    co2:         { min: st.minCo2,         max: st.maxCo2 },
-    temperature: { min: st.minTemperature, max: st.maxTemperature },
-    humidity:    { min: st.minHumidity,    max: st.maxHumidity }
+    co2:              { min: st.minCo2,              max: st.maxCo2 },
+    temperature:      { min: st.minTemperature,      max: st.maxTemperature },
+    humidity:         { min: st.minHumidity,         max: st.maxHumidity },
+    sht40Temperature: { min: st.minSht40Temperature, max: st.maxSht40Temperature },
+    sht40Humidity:    { min: st.minSht40Humidity,    max: st.maxSht40Humidity }
   };
 
   function renderMinMax(card, metric) {
@@ -191,6 +199,18 @@
       td.textContent = Labels.value(m, reading[m]);
       tr.appendChild(td);
     });
+    var s40 = reading.sht40Status || {};
+    [
+      { key: 'sht40Temperature', status: s40.temperature || 'unknown' },
+      { key: 'sht40Humidity', status: s40.humidity || 'unknown' }
+    ].forEach(function (item) {
+      var v = reading[item.key];
+      var has = v !== null && v !== undefined && !isNaN(v);
+      var td = document.createElement('td');
+      td.className = 'status-' + (has ? item.status : 'unknown');
+      td.textContent = has ? Labels.value(item.key, v) : '—';
+      tr.appendChild(td);
+    });
     historyTableBody.prepend(tr);
 
     while (historyTableBody.rows.length > tableRows) {
@@ -215,9 +235,12 @@
   }
 
   function renderReading(reading) {
-    updateStatCard('co2',         reading.co2,         reading.status.co2);
-    updateStatCard('temperature', reading.temperature, reading.status.temperature);
-    updateStatCard('humidity',    reading.humidity,    reading.status.humidity);
+    var s40 = reading.sht40Status || {};
+    updateStatCard('co2',              reading.co2,              reading.status.co2);
+    updateStatCard('temperature',      reading.temperature,      reading.status.temperature);
+    updateStatCard('humidity',         reading.humidity,         reading.status.humidity);
+    updateStatCard('sht40Temperature', reading.sht40Temperature, s40.temperature || 'unknown');
+    updateStatCard('sht40Humidity',    reading.sht40Humidity,    s40.humidity || 'unknown');
     prependHistoryRow(reading);
     if (chart) chart.update('none');
     refreshLiveness();
@@ -243,6 +266,8 @@
     var css = getComputedStyle(document.documentElement);
     function token(name) { return css.getPropertyValue(name).trim(); }
     var cCo2 = token('--color-metric-co2'), cTemp = token('--color-metric-temp'), cHumid = token('--color-metric-humid');
+    var cShtTemp = token('--color-metric-sht40-temp') || '#D97706';
+    var cShtHumid = token('--color-metric-sht40-humid') || '#1D5B9E';
     var rCo2 = token('--color-metric-co2-rgb'), rTemp = token('--color-metric-temp-rgb'), rHumid = token('--color-metric-humid-rgb');
     var cText = token('--color-text'), cMuted = token('--color-text-muted'), cFaint = token('--color-text-faint');
     var cSurface = token('--color-surface'), cBorder = token('--color-border');
@@ -262,7 +287,11 @@
     gradHumid.addColorStop(1, 'rgba(' + rHumid + ', 0.01)');
 
     var series = initialData.chartSeries || [];
-    series.forEach(function (p) { bucketKeys.push(bucketOf(p.t)); bucketCounts.push(p.n || 1); });
+    series.forEach(function (p) {
+      bucketKeys.push(bucketOf(p.t));
+      bucketCounts.push(p.n || 1);
+      shtBucketCounts.push(p.sht40Temperature !== null && p.sht40Temperature !== undefined ? (p.n || 1) : 0);
+    });
     var labels = series.map(function (p) { return formatChartTime(p.t); });
 
     return new Chart(ctx, {
@@ -271,7 +300,7 @@
         labels: labels,
         datasets: [
           {
-            label: 'คาร์บอนไดออกไซด์ (ppm)',
+            label: 'CO₂ SCD40 (ppm)',
             data: series.map(function (p) { return p.co2; }),
             borderColor: cCo2,
             backgroundColor: gradCo2,
@@ -284,7 +313,7 @@
             borderWidth: 2,
           },
           {
-            label: 'อุณหภูมิ (°C)',
+            label: 'อุณหภูมิ SCD40 (°C)',
             data: series.map(function (p) { return p.temperature; }),
             borderColor: cTemp,
             backgroundColor: gradTemp,
@@ -297,7 +326,7 @@
             borderWidth: 2,
           },
           {
-            label: 'ความชื้นในอากาศ (%)',
+            label: 'ความชื้น SCD40 (%)',
             data: series.map(function (p) { return p.humidity; }),
             borderColor: cHumid,
             backgroundColor: gradHumid,
@@ -307,6 +336,36 @@
             pointRadius: 0,
             pointHoverRadius: 5,
             pointHoverBackgroundColor: cHumid,
+            borderWidth: 2,
+          },
+          {
+            label: 'อุณหภูมิ SHT40 (°C)',
+            data: series.map(function (p) { return p.sht40Temperature ?? null; }),
+            borderColor: cShtTemp,
+            backgroundColor: 'transparent',
+            fill: false,
+            borderDash: [5, 4],
+            spanGaps: false,
+            yAxisID: 'yTemp',
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: cShtTemp,
+            borderWidth: 2,
+          },
+          {
+            label: 'ความชื้น SHT40 (%)',
+            data: series.map(function (p) { return p.sht40Humidity ?? null; }),
+            borderColor: cShtHumid,
+            backgroundColor: 'transparent',
+            fill: false,
+            borderDash: [5, 4],
+            spanGaps: false,
+            yAxisID: 'yTemp',
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: cShtHumid,
             borderWidth: 2,
           }
         ]
@@ -370,6 +429,7 @@
   var maxChartPoints = Math.ceil(24 * 3600 * 1000 / bucketMs);
   var bucketKeys = [];
   var bucketCounts = [];
+  var shtBucketCounts = [];
 
   function bucketOf(iso) { return Math.floor(new Date(iso).getTime() / bucketMs); }
 
@@ -377,29 +437,50 @@
     try { return new Date(iso).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return iso; }
   }
 
+  function avgBucket(prev, next, count) {
+    return count === 0 || prev === null || prev === undefined
+      ? next
+      : Math.round(((prev * count + next) / (count + 1)) * 10) / 10;
+  }
+
   function addChartReading(reading) {
     if (!chart) return;
     var key = bucketOf(reading.createdAt);
     var last = bucketKeys.length - 1;
     var sets = chart.data.datasets;
-    var values = [reading.co2, reading.temperature, reading.humidity].map(function (v) { return Math.round(v * 10) / 10; });
+    var scdValues = [reading.co2, reading.temperature, reading.humidity].map(function (v) { return Math.round(v * 10) / 10; });
+    var hasSht = reading.sht40Temperature !== null && reading.sht40Temperature !== undefined
+      && reading.sht40Humidity !== null && reading.sht40Humidity !== undefined;
+    var shtValues = hasSht
+      ? [Math.round(reading.sht40Temperature * 10) / 10, Math.round(reading.sht40Humidity * 10) / 10]
+      : [null, null];
 
     if (last >= 0 && bucketKeys[last] === key) {
       var n = bucketCounts[last];
-      sets.forEach(function (ds, i) {
-        ds.data[last] = Math.round(((ds.data[last] * n + values[i]) / (n + 1)) * 10) / 10;
-      });
+      for (var i = 0; i < 3; i++) {
+        sets[i].data[last] = avgBucket(sets[i].data[last], scdValues[i], n);
+      }
       bucketCounts[last] = n + 1;
+      if (hasSht) {
+        var sn = shtBucketCounts[last] || 0;
+        sets[3].data[last] = avgBucket(sets[3].data[last], shtValues[0], sn);
+        sets[4].data[last] = avgBucket(sets[4].data[last], shtValues[1], sn);
+        shtBucketCounts[last] = sn + 1;
+      }
       return;
     }
 
     bucketKeys.push(key);
     bucketCounts.push(1);
+    shtBucketCounts.push(hasSht ? 1 : 0);
     chart.data.labels.push(formatChartTime(new Date(key * bucketMs).toISOString()));
-    sets.forEach(function (ds, i) { ds.data.push(values[i]); });
+    for (var j = 0; j < 3; j++) sets[j].data.push(scdValues[j]);
+    sets[3].data.push(shtValues[0]);
+    sets[4].data.push(shtValues[1]);
     while (bucketKeys.length > maxChartPoints) {
       bucketKeys.shift();
       bucketCounts.shift();
+      shtBucketCounts.shift();
       chart.data.labels.shift();
       sets.forEach(function (ds) { ds.data.shift(); });
     }

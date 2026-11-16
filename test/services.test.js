@@ -67,8 +67,12 @@ test('history filters by age while recent readings keep newest-first order and l
 
 test('statistics and chart buckets retain averages, rounding and sample counts', () => {
   const bucketStart = Math.floor((Date.now() - 600000) / 300000) * 300000;
-  for (const [offset, co2, temperature, humidity] of [[1000, 800, 26, 80], [2000, 1000, 29, 90], [301000, 1200, 30, 95]]) {
-    const stored = sensors.recordReading({ ...reading, co2, temperature, humidity });
+  for (const [offset, co2, temperature, humidity, sht40Temperature, sht40Humidity] of [
+    [1000, 800, 26, 80, 25.0, 82.0],
+    [2000, 1000, 29, 90, 27.0, 86.0],
+    [301000, 1200, 30, 95, null, null],
+  ]) {
+    const stored = sensors.recordReading({ ...reading, co2, temperature, humidity, sht40Temperature, sht40Humidity });
     db.prepare('UPDATE readings SET created_at = ? WHERE id = ?')
       .run(new Date(bucketStart + offset).toISOString(), stored.id);
   }
@@ -79,10 +83,16 @@ test('statistics and chart buckets retain averages, rounding and sample counts',
   assert.equal(stats.avgCo2, 1000);
   assert.equal(stats.avgTemperature, 28.3);
   assert.equal(stats.avgHumidity, 88.3);
+  assert.equal(stats.minSht40Temperature, 25);
+  assert.equal(stats.maxSht40Temperature, 27);
+  assert.equal(stats.avgSht40Humidity, 84);
   const series = sensors.getChartSeries(24);
-  assert.deepEqual(series.map((p) => ({ co2: p.co2, temperature: p.temperature, humidity: p.humidity, n: p.n })), [
-    { co2: 900, temperature: 27.5, humidity: 85, n: 2 },
-    { co2: 1200, temperature: 30, humidity: 95, n: 1 },
+  assert.deepEqual(series.map((p) => ({
+    co2: p.co2, temperature: p.temperature, humidity: p.humidity,
+    sht40Temperature: p.sht40Temperature, sht40Humidity: p.sht40Humidity, n: p.n,
+  })), [
+    { co2: 900, temperature: 27.5, humidity: 85, sht40Temperature: 26, sht40Humidity: 84, n: 2 },
+    { co2: 1200, temperature: 30, humidity: 95, sht40Temperature: null, sht40Humidity: null, n: 1 },
   ]);
   assert.equal(Date.parse(series[0].t), bucketStart);
   assert.equal(sensors.CHART_BUCKET_SECONDS, 300);

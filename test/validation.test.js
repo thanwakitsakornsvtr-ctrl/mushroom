@@ -24,6 +24,7 @@ test('reading validation keeps device defaults, trims identifiers and accepts ph
   assert.equal(readingSchema.parse({ ...reading, deviceId: ' greenhouse-01 ' }).deviceId, 'greenhouse-01');
   assert.equal(readingSchema.safeParse({ co2: 0, temperature: -40, humidity: 0 }).success, true);
   assert.equal(readingSchema.safeParse({ co2: 40000, temperature: 85, humidity: 100 }).success, true);
+  assert.equal(readingSchema.safeParse({ ...reading, sht40Temperature: 26.4, sht40Humidity: 88.2 }).success, true);
 });
 
 test('reading validation rejects out-of-range, missing and nonnumeric measurements', () => {
@@ -31,6 +32,8 @@ test('reading validation rejects out-of-range, missing and nonnumeric measuremen
     { co2: -1 }, { co2: 40001 }, { co2: 1.5 }, { co2: '800' }, { co2: NaN },
     { temperature: -41 }, { temperature: 86 }, { temperature: Infinity },
     { humidity: -1 }, { humidity: 101 }, { humidity: null },
+    { sht40Temperature: -41 }, { sht40Temperature: 126 }, { sht40Temperature: '25' },
+    { sht40Humidity: -1 }, { sht40Humidity: 101 }, { sht40Humidity: Infinity },
     { deviceId: '' }, { deviceId: ' ' }, { deviceId: 'x'.repeat(65) },
   ]) {
     assert.equal(readingSchema.safeParse({ ...reading, ...invalid }).success, false, JSON.stringify(invalid));

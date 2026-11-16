@@ -1,13 +1,16 @@
 <%
   // stat-card partial — class และ data-role ต้องตรงกับที่ dashboard.client.js ใช้
-  var th = thresholds[metricKey] || {};
+  var baseMetric = locals.thresholdKey || metricKey;
+  var iconKey = locals.iconMetric || baseMetric;
+  var th = thresholds[baseMetric] || {};
   var displayValue = (value !== null && value !== undefined)
-    ? (metricKey === 'co2' ? Math.round(value).toString() : value.toFixed(1))
+    ? (baseMetric === 'co2' ? Math.round(value).toString() : value.toFixed(1))
     : null;
 
   var hasValue = displayValue !== null;
+  var cardStale = stale && hasValue;
   var effectiveStatus = stale || !hasValue ? 'unknown' : status;
-  var badgeLabel = labels.metricStatus(metricKey, status, stale, hasValue);
+  var badgeLabel = labels.metricStatus(baseMetric, status, stale, hasValue);
 
   // min/max 24h
   var minKey = 'min' + metricKey.charAt(0).toUpperCase() + metricKey.slice(1);
@@ -17,21 +20,22 @@
 
   // gauge
   var hasGauge = th.normalMin !== undefined && th.normalMax !== undefined;
-  var gauge = labels.gauge(metricKey, value, th);
+  var gauge = labels.gauge(baseMetric, value, th);
   var zoneLeft = gauge.zoneLeft;
   var zoneWidth = gauge.zoneWidth;
   var markerLeft = gauge.pos;
 %>
-<article class="stat-card<% if (stale) { %> stat-card--stale<% } %>"
+<article class="stat-card<% if (cardStale) { %> stat-card--stale<% } %>"
          data-metric="<%= metricKey %>"
+         data-threshold-metric="<%= baseMetric %>"
          data-status="<%= status %>"
          data-has-value="<%= hasValue %>"
-         aria-label="<%= label %>">
+         aria-label="<%= label %><%= locals.sourceTag ? ' (' + sourceTag + ')' : '' %>">
 
   <!-- Zone 1: Header -->
   <div class="stat-card__header">
-    <div class="stat-card__icon-wrap stat-card__icon-wrap--<%= metricKey %>"><svg class="icon" aria-hidden="true"><use href="#<%= icon %>"/></svg></div>
-    <span class="stat-card__label"><%= label %></span>
+    <div class="stat-card__icon-wrap stat-card__icon-wrap--<%= iconKey %>"><svg class="icon" aria-hidden="true"><use href="#<%= icon %>"/></svg></div>
+    <span class="stat-card__label"><%= label %><% if (locals.sourceTag) { %> <span class="stat-card__source"><%= sourceTag %></span><% } %></span>
     <span class="status-badge status-badge--<%= effectiveStatus %>" data-role="status"><%= badgeLabel %></span>
   </div>
 

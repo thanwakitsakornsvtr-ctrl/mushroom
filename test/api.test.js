@@ -73,6 +73,15 @@ test('reading ingest, latest and history preserve values, classifications and de
   const defaultDevice = await request('/api/sensors/readings', { co2: 1600, temperature: 31, humidity: 79 });
   assert.equal(defaultDevice.body.deviceId, 'esp32-scd40-01');
   assert.deepEqual(defaultDevice.body.status, { co2: 'high', temperature: 'high', humidity: 'low' });
+  assert.equal(defaultDevice.body.sht40Temperature, null);
+  assert.equal(defaultDevice.body.sht40Humidity, null);
+  const withSht40 = await request('/api/sensors/readings', {
+    ...reading, sht40Temperature: 26.3, sht40Humidity: 88.7,
+  });
+  assert.equal(withSht40.status, 201);
+  assert.equal(withSht40.body.sht40Temperature, 26.3);
+  assert.equal(withSht40.body.sht40Humidity, 88.7);
+  assert.deepEqual(withSht40.body.sht40Status, { temperature: 'normal', humidity: 'normal' });
 });
 
 test('history and decision queries keep their default and clamped time ranges', async () => {
